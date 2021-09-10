@@ -1,12 +1,12 @@
 ---
-title: DS Algorithms for Securing NS and Glue
-abbrev: DS Algorithms for Securing NS and Glue
-docname: draft-dickson-dnsop-ds-hack-00
+title: Authenticated DNS over TLS to Authoritative Servers
+abbrev: Authenticated ADoT
+docname: draft-dickson-dprive-adot-auth-00
 category: info
 
 ipr: trust200902
 area: Operations
-workgroup: DNSOP Working Group
+workgroup: DPRIVE Working Group
 keyword: Internet-Draft
 
 stand_alone: yes
@@ -26,11 +26,13 @@ informative:
 
 --- abstract
 
-This Internet Draft proposes a mechanism to encode relevant data for NS records (and optionally A and AAAA records) on the parental side of a zone cut, by encoding them in new DS algorithms.
+This Internet Draft proposes a mechanism for DNS resolvers to discover support for TLS transport to authoritative DNS servers, to validate this indication of support, and to authenticate the TLS certificates involved.
 
-Since DS records are signed by the parent, this creates a method for validation of the otherwise unsigned delegation and glue records.
+FIXME
 
-This is beneficial if the name server _names_ are in a DNSSEC signed zone.
+This requires that the name server _names_ are in a DNSSEC signed zone.
+
+This also requires that the delegation of the zone served is protected by {{?I-D.dickson-dnsop-ds-hack}}, as the NS name is the key used for discovery of TLS transport support.
 
 --- middle
 
