@@ -38,13 +38,13 @@ This also requires that the delegation of the zone served is protected by {{?I-D
 
 # Introduction
 
-There are new privacy goals and DNS server capability discovery goals, which cannot be met without the ability to validate the name of the name servers for a given domain at the delegation point.
+The Domain Name System (DNS) predates any concerns over privacy, including the possibility of pervasive surveillance. The original transports for DNS were UDP and TCP, unencrypted. Additionally, DNS did not originally have any form of data integrity protection, including against active on-path attackers.
 
-Specifically, a query for NS records over an unprotected transport path returns results which do not have protection from tampering by an active on-path attacker, or against successful cache poisoning attackes.
+DNSSEC (DNS Security extensions) added data integrity protection, but did not address privacy concerns. The original DNS over TLS {{RFC7858}} and DNS over HTTPS {{RFC8484}} specifications were limited to client-to-resolver traffic.
 
-This is true regardless of the DNSSEC status of the domain containing the authoritative information for the name servers for the queried domain.
+The remaining privacy component is recursive-to-authoritative servers. This Internet Draft is designed to provide a solution to this problem.
 
-For example, querying for the NS records for "example.com", at the name servers for the "com" TLD, where the published com zone has "example.com NS ns1.example.net", is not protected against MITM attacks, even if the domain "example.net" (the domain serving records for "ns1.example.net") is DNSSEC signed.
+FIXME
 
 More infomation can be found in {{?I-D.nottingham-for-the-users}}. (An exmple
 of an informative reference to a draft in the middle of text. Note that 
@@ -60,124 +60,32 @@ when, and only when, they appear in all capitals, as shown here.
 
 # Background
 
-The methods developed for adding security to the Domain Name System, collectively refered to as DNSSEC, had as a primary requirement that they be backward compatible. The original specifications for DNS used the same Resourc Record Type (RRTYPE) on both the parent and child side of a zone cut (the NS record). The main goal of DNSSEC was to ensure data integrity by using cryptographic signatures. However, owing to this overlap in the NS record type  where the records above and below the zone cut have the same owner name  created an inherent conflict, as only the child zone is authoritative for these records.
-
 The result is that the parental side of the zone cut has records needed for DNS resolution  which are not signed  and not validatable.
 
-This has no impact on DNS zones which are fully DNSSEC signed (anchored at the IANA DNS Trust Anchor), but does impact unsigned zones  regardless of where the transition from secure to insecure occurs.
 
-# New DNSKEY Algorithms {#algorithms}
+# New SVCB Binding for DNS and DoT
 
 These new DNSKEY algorithms conform to the structure requirements from {{!RFC4034}}, but are not themselves used as actual DNSKEY algorithms. They are assigned values from the DNSKEY algorithm table. No DNSKEY records are published with these algorithms.
 
 They are used only as the input to the corresponding DS hashes published in the parent zone.
 
-## Algorithm {TBD1}
+## Default Ports for DNS
 
 This algorithm is used to validate the NS records of the delegation for the owner name.
 
 The NS records are canonicalized and sorted according to the DNSSEC signing process {{!RFC4034}} section 6, including removing any label compression, and normalizing the character cases to lower case. The RDATA fields of the records are concatenated, and the result is hashed using the selected digest algorithm(s), e.g. SHA2-256 for DS digest algorithm 1.
 
-### Example
-
-Consider the delegation in the COM zone:
-example.com NS ns1.example.net
-example.com NS ns2.example.net
-
-These two records have RDATA, which after canonicalization and sorting, would be
-ns1.example.net
-ns2.example.net
-
-The input to the digest is the concatenation of those values in wire format.
-For example, if the NS set's RDATA are "ns1.example.net" and "ns2.example.net",
-the wire format would be
-
-    0x03
-    ns1
-    0x07
-    example
-    0x03
-    net
-    0x00
-    0x03
-    ns2
-    0x07
-    example
-    0x03
-    net
-    0x00
-
-The Key Tag is calculated per {{!RFC4034}} using this value as the RDATA.
-
-The resulting DS record is
-
-    example.com DS KeyTag=0 Algorithm={TBD1} DigestType=2 \
-    Digest=sha2-256()
-
-
-## Algorithm {TBD2}
-
-This algorithm is used to validate the glue A records required as glue for the delegation NS set associated with the owner name.
-
-The glue A records are canonicalized and sorted according to the DNSSEC signing process {{!RFC4034}}, including removing any label compression, and normalizing the character cases. The entirety of the records are concatenated, and the result is hashed using the selected hash type(s), e.g. SHA2-256 for DS type 2.
+## Optional Port for DoT
 
 ### Example
 
-For example, if the original "glue" (unsigned) A records are:
-
-    ns1.example.net IN 3600 A standard-example-ip-1
-    ns2.example.net IN 3600 A standard-example-ip-2
-
-There would be one DS record for each of the glue "A" records, with the canonicalized
-wire format of the entire record provided as input to the hash function.
-
-    FIXME replace 0xfffffffx with real example IP addresses
-    (per IANA table of example IPs)
-    First A record's DS record:
-    wire_format(ns1.example.net) 0x01 0x01 3600 0xfffffff0
-    Second A record's DS record:
-    wire_format(ns2.example.net) 0x01 0x01 3600 0xfffffff1
-
-Then the resulting DS record is
-
-    FIXME - who is the right owner to use here?
-    (The glue owner name, or the zone owner name (bailiwick only)?)
-    example.net DS KeyTag=0 Algorithm={TBD2} DigestType=2 \
-    Digest=sha2-256()
-    example.net DS KeyTag=0 Algorithm={TBD2} DigestType=2 \
-    Digest=sha2-256()
-
-## Algorithm {TBD3}
-
-This algorithm is used to validate the glue AAAA records required as glue for the delegation NS set associated with the owner name.
-
-The glue AAAA records are canonicalized and sorted according to the DNSSEC signing process {{!RFC4034}}, including removing any label compression, and normalizing the character cases. The entirety of the records are concatenated, and the result is hashed using the selected hash type(s), e.g. SHA2-256 for DS type 2.
+## DANE for DoT
 
 ### Example
 
-For example, if the original "glue" (unsigned) AAAA records are:
+## Signaling DNS Transport for a Domain
 
-    ns1.example.net IN 3600 AAAA standard-example-ip6-1
-    ns2.example.net IN 3600 AAAA standard-example-ip6-2
-
-There would be one DS record for each of the glue "A" records, with the canonicalized
-wire format of the entire record provided as input to the hash function.
-
-    FIXME replace 0xfffffffx with real example IP addresses
-    (per IANA table of example IPs)
-    First A record's DS record:
-    wire_format(ns1.example.net) 0x01 0xXX 3600 0x32-hex-digits
-    Second A record's DS record:
-    wire_format(ns2.example.net) 0x01 0xXX 3600 0x32-hex-digits
-
-Then the resulting DS record is
-
-    FIXME - who is the right owner to use here?
-    (The glue owner name, or the zone owner name (bailiwick only)?)
-    example.net DS KeyTag=0 Algorithm={TBD2} DigestType=2 \
-    Digest=sha2-256()
-    example.net DS KeyTag=0 Algorithm={TBD2} DigestType=2 \
-    Digest=sha2-256()
+### Example
 
 # Validation Using These DS Records
 
@@ -187,6 +95,28 @@ These new DS records are used to validate corresponding delegation records and g
 - Glue AAAA records (if present) are validated using {TBD3}
 
 The same method used for constructing the DS records, is used to validate their contents. The algorithm is replicated with the corresponding inputs, and the hash compared to the published DS record(s).
+
+# Signaling Support and Desire for ADoT
+
+## Server Side Support Signaling
+
+A DNS server (e.g. recursive resolver or forwarder) MAY signal to clients that it offers the use of ADoT.
+The mechanism used is to set the EDNS option "ADOTA".
+The values for this option are "Always", "Upon Request", and "Never".
+The value "Always" indicates the server will always attempt to use ADoT without regards to client requests for ADoT.
+The value "Upon Request" indicates that the server will ONLY use ADoT for upstream queries if the client requests that ADoT be used.
+These values have no effect on answers served from the resolver's cache.
+(The "Never" case is unusual, in that it signals the server understands the option, but does not perform ADoT. Generally this would be used to allow a client to track changes in the status, if the client is interested in uses of ADoT.)
+
+## Client Side Desire Signaling
+
+A DNS client (e.g. stub or forwarder) MAY signal the desire to have the resolver use ADoT.
+The mechanism used is to set the EDNS option "ADOTD".
+The values for this option are "Force", "If Available", and "Never".
+The value "Force" indicates the server should attempt to use ADoT, and return a failure code of XXXX and an EDE value of YYYY if the authoritative server does not offer ADoT, or any other ADoT failure occurs.
+The value "If Available" indicates that the server should use ADoT for upstream queries if it is availble, but SHOULD NOT allow any downgrades if the authoritative server signals that ADoT is available.
+These values have no effect on answers served from the resolver's cache.
+(The "Never" case is unusual, in that it signals the client understands the option, but does not perform ADoT. Generally this would be used to allow a server to track changes in the client base, so the server operator can make informed decisions about enabling ADoT.)
 
 # Security Considerations
 
