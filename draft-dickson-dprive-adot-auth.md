@@ -41,8 +41,6 @@ This requires that the name server _names_ are in a DNSSEC signed zone.
 
 This also requires that the delegation of the zone served is protected by [@?I-D.dickson-dnsop-ds-hack], since the NS names are the keys used for discovery of TLS transport support.
 
-FIXME
-
 {mainmatter}
 
 # Introduction
@@ -52,13 +50,6 @@ The Domain Name System (DNS) predates any concerns over privacy, including the p
 DNSSEC (DNS Security extensions) added data integrity protection, but did not address privacy concerns. The original DNS over TLS [@!RFC7858] and DNS over HTTPS [@!RFC8484] specifications were limited to client-to-resolver traffic.
 
 The remaining privacy component is recursive-to-authoritative servers. This Internet Draft is designed to provide a solution to this problem.
-
-FIXME
-
-More infomation can be found in [@?I-D.nottingham-for-the-users]. (An exmple
-of an informative reference to a draft in the middle of text. Note that 
-referencing an Internet draft involves replacing "draft-" in the name with 
-"I-D.")
 
 # Conventions and Definitions
 
