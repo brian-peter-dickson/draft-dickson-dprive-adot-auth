@@ -28,11 +28,11 @@ informative:
 
 This Internet Draft proposes a mechanism for DNS resolvers to discover support for TLS transport to authoritative DNS servers, to validate this indication of support, and to authenticate the TLS certificates involved.
 
-FIXME
-
 This requires that the name server _names_ are in a DNSSEC signed zone.
 
-This also requires that the delegation of the zone served is protected by {{?I-D.dickson-dnsop-ds-hack}}, as the NS name is the key used for discovery of TLS transport support.
+This also requires that the delegation of the zone served is protected by {{?I-D.dickson-dnsop-ds-hack}}, since the NS names are the keys used for discovery of TLS transport support.
+
+FIXME
 
 --- middle
 
@@ -62,32 +62,71 @@ when, and only when, they appear in all capitals, as shown here.
 
 The result is that the parental side of the zone cut has records needed for DNS resolution  which are not signed  and not validatable.
 
+# Purpose, Requirements, and Limitations
+
+Authoritative DNS over TLS is intended to provide the following for communications from recursive resolvers to authoritative servers:
+* Enable discovery of support for ADoT by use of SVCB, specifically using the RRTYPE "DNS" (service binding for DNS)
+* Validate the name server names serving specific domain names/zones, by use of DS records which encode the NS delegation names
+* Validate the IP addresses of those name server names, by use of DS records for the domain serving the NS names, or by indirect validation of NS names of the server names for the NS domain
+* Validate the TLS certificates used for the TLS connection to the server names at the corresponding IP addresses, either directly (End Entity) or indirectly (Sigining Certifiate) obtained by TLSA lookup
+* Authenticate the server name by requiring a match between the server name and the TLS certificate sent by the server on the TLS connection
+* Provide privacy via the end-to-end encrypted transport provided by TLS session which was validated by the above components
+
+This protocol depends on correct configuration and operation of the respective components, and that those are maintained according to Best Current Practices:
+* DS records for the protection of the delegation to the authoritive name servers
+* DNSSEC signing of the zone serving the authoritative name servers' names
+* DNSSEC signing of any other zones involved in serving the authoritative name servers' names (e.g. zones containing names of the name servers for the authoritative name servers).
+* Proper management of key signing material for DNSSEC
+* Ongoing management of RRSIGs on a timely basis (avoiding RRSIG expiry)
+* Ensuring TLSA records are kept synchronized with the TLS certificates for the name servers in question doing ADoT
+* Proper management of TLS private keys for TLS certificates
+
+There are external dependencies that impact the system security of any DNSSEC zone, which are inherently unavoidable in establishing this scheme. Specifially, the original DS record enrollment and any updates to the DS records involved in DNSSEC delegations are presumed secure and outside of the scope of the DNS protocol per se.
+
+Other risks relate to normal information security practices, including access controls, role based access, audits, multi-factor authentication, multi-party controls, etc. These are out of scope for this protocol itself.
 
 # New SVCB Binding for DNS and DoT
 
-These new DNSKEY algorithms conform to the structure requirements from {{!RFC4034}}, but are not themselves used as actual DNSKEY algorithms. They are assigned values from the DNSKEY algorithm table. No DNSKEY records are published with these algorithms.
-
-They are used only as the input to the corresponding DS hashes published in the parent zone.
+(Note: To be separated out into its own draft and expanded fully.)
+This SVCB binding will be given the RRTYPE value {TBD} with mnemonic name DNS.
 
 ## Default Ports for DNS
 
-This algorithm is used to validate the NS records of the delegation for the owner name.
-
-The NS records are canonicalized and sorted according to the DNSSEC signing process {{!RFC4034}} section 6, including removing any label compression, and normalizing the character cases to lower case. The RDATA fields of the records are concatenated, and the result is hashed using the selected digest algorithm(s), e.g. SHA2-256 for DS digest algorithm 1.
+This scheme uses an SVCB binding for DNS. The binding has default ports UDP/53 and TCP/53 as the default-alpn. These are assumed unless "no-default-alpn" is added as an optional SvcParam.
 
 ## Optional Port for DoT
 
+This scheme uses the defined ALPN for DNS-over-TLS with the assigned label "dot". Use of ADoT is signaled if and only if the the SvcParam of "alpn=dot" is present.
+
 ### Example
 
-## DANE for DoT
+## DANE TLSA Records for ADoT
+
+The presence of ADoT requires additionally that a TLSA record be provided. This record will be published at the locaion _853._tcp.NS_NAME, where NS_NAME is the name of the name server. Any valid TLSA record type is permitted. The use of types 0 and 1 is NOT RECOMMENDED. The use of type 2 TLSA records may provide more flexibility in provisioning, including use of wild cards.
+
+### Example
+
+## Signaling DNS Transport for a Name Server
+
+This transport signaling MUST only be trusted if the name server names for the domain containing the relevant name servers' names are protected with {{?I-D.dickson-dnsop-ds-hack}} (the DS hack).
+The name servers must also be in a DNSSEC signed zone (i.e. securely delegated where the delegation has been successfully DNSSEC validated).
+Similarly, any other NS names must be protected with {{?I-D.dickson-dnsop-ds-hack}}, and glue A and AAAA records required must also be protected with {{?I-D.dickson-dnsop-ds-hack}}.
+
+The specific DNS transport that a name server supports is indicated via use of an RRSet of RRTYPE "DNS". This is a SVCB binding, and normally will use the TargetName of "." (meaning the same name). The default ALPN (transport mechanisms) are TCP/53 and UDP/53. The ADoT transport support is signaled by "alpn=dot". There is an existing entry for "dot" in the ALPN table, with port TCP/853.
 
 ### Example
 
 ## Signaling DNS Transport for a Domain
 
+A domain inherits the signaled transport for the name servers serving the domain.
+
+This transport signaling MUST only be trusted for use of ADoT if the delegated name server names for the domain are protected with {{?I-D.dickson-dnsop-ds-hack}}.
+
+The delegation to NS names "A" and "B", along with the DS record protecting/encoding "A" and "B", results in the DNS transport that is signaled for "A" and "B" being applied to the domain being delegated. This transport will include ADoT IFF the transport for "A" and "B" has included ADoT via DNS records.
+
 ### Example
 
-# Validation Using These DS Records
+# Validation Using DS Records, DNS Records, TLSA Records, and DNSSEC Validation
 
 These new DS records are used to validate corresponding delegation records and glue, as follows:
 - NS records are validated using {TBD1}
