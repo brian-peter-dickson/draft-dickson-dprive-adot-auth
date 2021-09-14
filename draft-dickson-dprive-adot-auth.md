@@ -1,30 +1,39 @@
----
-title: Authenticated DNS over TLS to Authoritative Servers
-abbrev: Authenticated ADoT
-docname: draft-dickson-dprive-adot-auth-00
-category: info
+%%%
+title = "Authenticated DNS over TLS to Authoritative Servers"
+abbrev = "Authenticated ADoT"
+docName = "draft-dickson-dprive-adot-auth"
+category = "info"
 
-ipr: trust200902
-area: Operations
-workgroup: DPRIVE Working Group
-keyword: Internet-Draft
+[seriesInfo]
+name = "Internet-Draft"
+value = "draft-dickson-dprive-adot-auth-00"
+stream = "IETF"
+status = "informational"
 
-stand_alone: yes
-pi: [toc, sortrefs, symrefs]
 
-author:
- -
-    ins: B Dickson
-    name: Brian Dickson
-    organization: GoDaddy
-    email: brian.peter.dickson@gmail.com
+ipr = "trust200902"
+area = "Operations"
+workgroup = "DPRIVE Working Group"
+keyword = ["Internet-Draft"]
 
-normative:
-  RFC2119:
+[pi]
+toc = "yes"
+sortrefs = "yes"
+symrefs = "yes"
+stand_alone = "yes"
 
-informative:
+[[author]]
+initials = "B."
+surname = "Dickson"
+fullname = "Brian Dickson"
+organization = "GoDaddy"
+  [author.address]
+  email = "brian.peter.dickson@gmail.com"
 
---- abstract
+%%%
+
+
+.# Abstract
 
 This Internet Draft proposes a mechanism for DNS resolvers to discover support for TLS transport to authoritative DNS servers, to validate this indication of support, and to authenticate the TLS certificates involved.
 
@@ -34,7 +43,7 @@ This also requires that the delegation of the zone served is protected by {{?I-D
 
 FIXME
 
---- middle
+{mainmatter}
 
 # Introduction
 
@@ -190,10 +199,9 @@ cases.
 This document may or many not have any IANA actions.
 (e.g. if the RRTYPEs, DNSKEY algorithms, etc., are defined in other documents, no IANA actions are needed.)
 
---- back
+{backmatter}
 
 # Acknowledgments
-{:numbered="false"}
 
 Thanks to everyone who helped create the tools that let everyone use Markdown to create 
 Internet Drafts, and the RFC Editor for xml2rfc.
