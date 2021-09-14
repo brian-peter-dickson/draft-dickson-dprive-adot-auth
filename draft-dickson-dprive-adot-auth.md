@@ -74,25 +74,23 @@ The result is that the parental side of the zone cut has records needed for DNS 
 # Purpose, Requirements, and Limitations
 
 Authoritative DNS over TLS is intended to provide the following for communications from recursive resolvers to authoritative servers:
-```markdown
-* Enable discovery of support for ADoT by use of SVCB, specifically using the RRTYPE "DNS" (service binding for DNS)
-* Validate the name server names serving specific domain names/zones, by use of DS records which encode the NS delegation names
-* Validate the IP addresses of those name server names, by use of DS records for the domain serving the NS names, or by indirect validation of NS names of the server names for the NS domain
-* Validate the TLS certificates used for the TLS connection to the server names at the corresponding IP addresses, either directly (End Entity) or indirectly (Sigining Certifiate) obtained by TLSA lookup
-* Authenticate the server name by requiring a match between the server name and the TLS certificate sent by the server on the TLS connection
-* Provide privacy via the end-to-end encrypted transport provided by TLS session which was validated by the above components
-```
+
+*   Enable discovery of support for ADoT by use of SVCB, specifically using the RRTYPE "DNS" (service binding for DNS)
+*   Validate the name server names serving specific domain names/zones, by use of DS records which encode the NS delegation names
+*   Validate the IP addresses of those name server names, by use of DS records for the domain serving the NS names, or by indirect validation of NS names of the server names for the NS domain
+*   Validate the TLS certificates used for the TLS connection to the server names at the corresponding IP addresses, either directly (End Entity) or indirectly (Sigining Certifiate) obtained by TLSA lookup
+*   Authenticate the server name by requiring a match between the server name and the TLS certificate sent by the server on the TLS connection
+*   Provide privacy via the end-to-end encrypted transport provided by TLS session which was validated by the above components
 
 This protocol depends on correct configuration and operation of the respective components, and that those are maintained according to Best Current Practices:
-```markdown
-* DS records for the protection of the delegation to the authoritive name servers
-* DNSSEC signing of the zone serving the authoritative name servers' names
-* DNSSEC signing of any other zones involved in serving the authoritative name servers' names (e.g. zones containing names of the name servers for the authoritative name servers).
-* Proper management of key signing material for DNSSEC
-* Ongoing management of RRSIGs on a timely basis (avoiding RRSIG expiry)
-* Ensuring TLSA records are kept synchronized with the TLS certificates for the name servers in question doing ADoT
-* Proper management of TLS private keys for TLS certificates
-```
+
+*   DS records for the protection of the delegation to the authoritive name servers
+*   DNSSEC signing of the zone serving the authoritative name servers' names
+*   DNSSEC signing of any other zones involved in serving the authoritative name servers' names (e.g. zones containing names of the name servers for the authoritative name servers).
+*   Proper management of key signing material for DNSSEC
+*   Ongoing management of RRSIGs on a timely basis (avoiding RRSIG expiry)
+*   Ensuring TLSA records are kept synchronized with the TLS certificates for the name servers in question doing ADoT
+*   Proper management of TLS private keys for TLS certificates
 
 There are external dependencies that impact the system security of any DNSSEC zone, which are inherently unavoidable in establishing this scheme. Specifially, the original DS record enrollment and any updates to the DS records involved in DNSSEC delegations are presumed secure and outside of the scope of the DNS protocol per se.
 
@@ -156,16 +154,15 @@ The delegation to NS names "A" and "B", along with the DS record protecting/enco
 # Validation Using DS Records, DNS Records, TLSA Records, and DNSSEC Validation
 
 These records are used to validate corresponding delegation records, glue, DNS records, and TLSA records, as follows:
-```markdown
-* Initial domain NS records are validated using {{?I-D.dickson-dnsop-ds-hack}}
-* The respective name server names' domain's NS records are validated using {{?I-D.dickson-dnsop-ds-hack}}
-* If served by a different zone, the NS records of those respective name server names' domain's are also validated using {{?I-D.dickson-dnsop-ds-hack}}
-* Glue A records (if present) are validated using {{?I-D.dickson-dnsop-ds-hack}}
-* Glue AAAA records (if present) are validated using {{?I-D.dickson-dnsop-ds-hack}}
-* All DS records imlementing {{?I-D.dickson-dnsop-ds-hack}} must be DNSSEC validated prior to use
-* Once the NS names have been validated, and the delegations to the appropriate name servers are validated, the DNS records for the NS name are obtained to identify the DNS transport methods supported.
-* If ADoT is among the supported transports, the TLSA record for the name server is obtained, and used for verification of the TLS certificate when making the TLS connection.
-```
+
+*   Initial domain NS records are validated using {{?I-D.dickson-dnsop-ds-hack}}
+*   The respective name server names' domain's NS records are validated using {{?I-D.dickson-dnsop-ds-hack}}
+*   If served by a different zone, the NS records of those respective name server names' domain's are also validated using {{?I-D.dickson-dnsop-ds-hack}}
+*   Glue A records (if present) are validated using {{?I-D.dickson-dnsop-ds-hack}}
+*   Glue AAAA records (if present) are validated using {{?I-D.dickson-dnsop-ds-hack}}
+*   All DS records imlementing {{?I-D.dickson-dnsop-ds-hack}} must be DNSSEC validated prior to use
+*   Once the NS names have been validated, and the delegations to the appropriate name servers are validated, the DNS records for the NS name are obtained to identify the DNS transport methods supported.
+*   If ADoT is among the supported transports, the TLSA record for the name server is obtained, and used for verification of the TLS certificate when making the TLS connection.
 
 # Signaling Support and Desire for ADoT
 
