@@ -40,7 +40,7 @@ FIXME
 
 The Domain Name System (DNS) predates any concerns over privacy, including the possibility of pervasive surveillance. The original transports for DNS were UDP and TCP, unencrypted. Additionally, DNS did not originally have any form of data integrity protection, including against active on-path attackers.
 
-DNSSEC (DNS Security extensions) added data integrity protection, but did not address privacy concerns. The original DNS over TLS {{RFC7858}} and DNS over HTTPS {{RFC8484}} specifications were limited to client-to-resolver traffic.
+DNSSEC (DNS Security extensions) added data integrity protection, but did not address privacy concerns. The original DNS over TLS {{!RFC7858}} and DNS over HTTPS {{!RFC8484}} specifications were limited to client-to-resolver traffic.
 
 The remaining privacy component is recursive-to-authoritative servers. This Internet Draft is designed to provide a solution to this problem.
 
