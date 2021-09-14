@@ -89,6 +89,9 @@ Other risks relate to normal information security practices, including access co
 
 (Note: To be separated out into its own draft and expanded fully.)
 This SVCB binding will be given the RRTYPE value {TBD} with mnemonic name DNS.
+Like any SVCB binding, there is a mandatory TargetName (which will normally be ".", indicating the target is the same as the record owner name).
+The default binding is the standard DNS ports, UDP/53 and TCP/53.
+The SVCB binding includes support for an optional ADoT port, which is the standard DoT port TCP/853. This is signaled by "alpn=dot".
 
 ## Default Ports for DNS
 
@@ -100,11 +103,20 @@ This scheme uses the defined ALPN for DNS-over-TLS with the assigned label "dot"
 
 ### Example
 
+Suppose the name server ns1.example.net supports only the normal DNS ports, and the name server ns2.example.net supports both the normal ports and ADoT.
+The zone example.net would include the records:
+    ns1.example.net. IN DNS "."
+    ns2.example.net. IN DNS "." alpn=dot
+    (plus A/AAAA records for these servers).
+
 ## DANE TLSA Records for ADoT
 
 The presence of ADoT requires additionally that a TLSA record be provided. This record will be published at the locaion _853._tcp.NS_NAME, where NS_NAME is the name of the name server. Any valid TLSA record type is permitted. The use of types 0 and 1 is NOT RECOMMENDED. The use of type 2 TLSA records may provide more flexibility in provisioning, including use of wild cards.
 
 ### Example
+
+In the above example, ns2.example.net supports DNS over TLS, and would need to have a TLSA record. The zone would include:
+    ns2.example.net. IN TLSA 2 1 2 (sha2-256 fingerprint of one of the parental signing certs of the TLS certificate itself)
 
 ## Signaling DNS Transport for a Name Server
 
@@ -128,12 +140,15 @@ The delegation to NS names "A" and "B", along with the DS record protecting/enco
 
 # Validation Using DS Records, DNS Records, TLSA Records, and DNSSEC Validation
 
-These new DS records are used to validate corresponding delegation records and glue, as follows:
-- NS records are validated using {TBD1}
-- Glue A records (if present) are validated using {TBD2}
-- Glue AAAA records (if present) are validated using {TBD3}
-
-The same method used for constructing the DS records, is used to validate their contents. The algorithm is replicated with the corresponding inputs, and the hash compared to the published DS record(s).
+These records are used to validate corresponding delegation records, glue, DNS records, and TLSA records, as follows:
+- Initial domain NS records are validated using {{?I-D.dickson-dnsop-ds-hack}}
+- The respective name server names' domain's NS records are validated using {{?I-D.dickson-dnsop-ds-hack}}
+- If served by a different zone, the NS records of those respective name server names' domain's are also validated using {{?I-D.dickson-dnsop-ds-hack}}
+- Glue A records (if present) are validated using {{?I-D.dickson-dnsop-ds-hack}}
+- Glue AAAA records (if present) are validated using {{?I-D.dickson-dnsop-ds-hack}}
+- All DS records imlementing {{?I-D.dickson-dnsop-ds-hack}} must be DNSSEC validated prior to use
+- Once the NS names have been validated, and the delegations to the appropriate name servers are validated, the DNS records for the NS name are obtained to identify the DNS transport methods supported.
+- If ADoT is among the supported transports, the TLSA record for the name server is obtained, and used for verification of the TLS certificate when making the TLS connection.
 
 # Signaling Support and Desire for ADoT
 
@@ -164,8 +179,8 @@ cases.
 
 # IANA Considerations
 
-This document has no IANA actions.
-(Well, actually, TBD1, TBD2, and TBD3 need to be assigned from the DNSSEC DNSKEY Algorithm Table.)
+This document may or many not have any IANA actions.
+(e.g. if the RRTYPEs, DNSKEY algorithms, etc., are defined in other documents, no IANA actions are needed.)
 
 --- back
 
