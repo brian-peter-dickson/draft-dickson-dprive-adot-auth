@@ -77,7 +77,7 @@ Authoritative DNS over TLS is intended to provide the following for communicatio
 
 *   Enable discovery of support for ADoT by use of SVCB, specifically using the RRTYPE "DNS" (service binding for DNS)
 *   Validate the name server names serving specific domain names/zones, by use of DS records which encode the NS delegation names
-*   Validate the IP addresses of those name server names, by use of DS records for the domain serving the NS names, or by indirect validation of NS names of the server names for the NS domain
+*   Validate any necessray glue IP addresses (non-authoritive IP addresses included in the Additional section) of those name server names, by use of DS records for the domain serving the NS names, or by indirect validation of NS names of the server names for the NS domain
 *   Validate the TLS certificates used for the TLS connection to the server names at the corresponding IP addresses, either directly (End Entity) or indirectly (Sigining Certifiate) obtained by TLSA lookup
 *   Authenticate the server name by requiring a match between the server name and the TLS certificate sent by the server on the TLS connection
 *   Provide privacy via the end-to-end encrypted transport provided by TLS session which was validated by the above components
@@ -117,8 +117,8 @@ This scheme uses the defined ALPN for DNS-over-TLS with the assigned label "dot"
 Suppose the name server ns1.example.net supports only the normal DNS ports, and the name server ns2.example.net supports both the normal ports and ADoT.
 The zone example.net would include the records:
 
-        ns1.example.net. IN DNS "."
-        ns2.example.net. IN DNS "." alpn=dot
+        ns1.example.net. IN DNS 1 "."
+        ns2.example.net. IN DNS 1 "." alpn=dot
         (plus A/AAAA records for these servers).
 
 ## DANE TLSA Records for ADoT
@@ -129,7 +129,7 @@ The presence of ADoT requires additionally that a TLSA record be provided. This 
 
 In the above example, ns2.example.net supports DNS over TLS, and would need to have a TLSA record. The zone would include:
 
-        ns2.example.net. IN TLSA 2 1 2 (sha2-256 fingerprint )
+        ns2.example.net. IN TLSA 2 1 2 (sha2-256 hash of a signing cert)
 
 ## Signaling DNS Transport for a Name Server
 
