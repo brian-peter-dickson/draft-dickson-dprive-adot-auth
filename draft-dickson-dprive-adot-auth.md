@@ -96,19 +96,29 @@ There are external dependencies that impact the system security of any DNSSEC zo
 
 Other risks relate to normal information security practices, including access controls, role based access, audits, multi-factor authentication, multi-party controls, etc. These are out of scope for this protocol itself.
 
-# New SVCB Binding for DNS and DoT
+# DNS Records To Publish for ADoT
+## Server DNS Transport Support Signaling
 
-(Note: To be separated out into its own draft and expanded fully.)
+In order to support ADoT for a DNS server, it is necessary to publish a record specifyig explicit DoT support.
+This record also indicates other supported transports for the DNS server, e.g. the standard ports (TCP and UDP port 53).
+
+The record type is "DNS", which is a specific instance of SVCB with unique RRTYPE.
+
+The zone serving the record MUST be DNSSEC signed. The absence of the DNS RRTYPE is proven by the NSEC(3) record, or the DNS RRTYPE plus RRSIG is returned in response to a query for this record.
+
+### Prerequisite: New SVCB Binding for DNS and DoT
+
+(NB: To be separated out into its own draft and expanded fully.)
 This SVCB binding will be given the RRTYPE value {TBD} with mnemonic name DNS.
 Like any SVCB binding, there is a mandatory TargetName (which will normally be ".", indicating the target is the same as the record owner name).
 The default binding is the standard DNS ports, UDP/53 and TCP/53.
 The SVCB binding includes support for an optional ADoT port, which is the standard DoT port TCP/853. This is signaled by "alpn=dot".
 
-## Default Ports for DNS
+#### Default Ports for DNS
 
 This scheme uses an SVCB binding for DNS. The binding has default ports UDP/53 and TCP/53 as the default-alpn. These are assumed unless "no-default-alpn" is added as an optional SvcParam.
 
-## Optional Port for DoT
+#### Optional Port for DoT
 
 This scheme uses the defined ALPN for DNS-over-TLS with the assigned label "dot". Use of ADoT is signaled if and only if the the SvcParam of "alpn=dot" is present.
 
@@ -120,6 +130,8 @@ The zone example.net would include the records:
         ns1.example.net. IN DNS 1 "."
         ns2.example.net. IN DNS 1 "." alpn=dot
         (plus A/AAAA records for these servers).
+
+The first parameter is the SvcPriority, which must be non-zero (zero indicates AliasForm SVCB record type). Note that it is possible to use different SvcPriority, directing resolvers to prefer non-DoT over DoT or vice versa. This would be appropriate based on the resolver's local policy, and potentially support mandatory use of DoT if present on any server in the NS RRset.
 
 ## DANE TLSA Records for ADoT
 
@@ -140,6 +152,10 @@ Similarly, any other NS names must be protected with [@?I-D.dickson-dnsop-ds-hac
 The specific DNS transport that a name server supports is indicated via use of an RRSet of RRTYPE "DNS". This is a SVCB binding, and normally will use the TargetName of "." (meaning the same name). The default ALPN (transport mechanisms) are TCP/53 and UDP/53. The ADoT transport support is signaled by "alpn=dot". There is an existing entry for "dot" in the ALPN table, with port TCP/853.
 
 ### Example
+We re-use the same example from above, indicating whether or not individual authoritative name servers support DoT:
+
+        ns1.example.net. IN DNS 1 "."
+        ns2.example.net. IN DNS 1 "." alpn=dot
 
 ## Signaling DNS Transport for a Domain
 
@@ -150,6 +166,13 @@ This transport signaling MUST only be trusted for use of ADoT if the delegated n
 The delegation to NS names "A" and "B", along with the DS record protecting/encoding "A" and "B", results in the DNS transport that is signaled for "A" and "B" being applied to the domain being delegated. This transport will include ADoT IFF the transport for "A" and "B" has included ADoT via DNS records.
 
 ### Example
+No additional configutation is needed, beyond use of authority servers which signal DoT support.
+The following example assumes the previous DNS records are provisioned:
+
+	example.comm NS ns1.example.net.
+	example.comm NS ns2.example.net.
+
+In this example, ns1 does not have ADoT support (since the DNS record excludes the "alpn=dot" parameter), while ns2 does support ADoT (since it includes "alpn=dot").
 
 # Validation Using DS Records, DNS Records, TLSA Records, and DNSSEC Validation
 
@@ -165,6 +188,10 @@ These records are used to validate corresponding delegation records, glue, DNS r
 *   If ADoT is among the supported transports, the TLSA record for the name server is obtained, and used for verification of the TLS certificate when making the TLS connection.
 
 # Signaling Support and Desire for ADoT
+
+The following presume some new OPT sub-types, to be added to the IANA action section or to be split out as separate drafts.
+The sub-type mnemonics are "ADOTA" (available) and "ADOTD" (desired), each with an enumerated set of values and mnemonic codes.
+Respectively those are: "Always", "Upon Request", and "Never"; and "Force", "If Available", and "Never".
 
 ## Server Side Support Signaling
 
@@ -203,6 +230,6 @@ This document may or many not have any IANA actions.
 Thanks to everyone who helped create the tools that let everyone use Markdown to create 
 Internet Drafts, and the RFC Editor for xml2rfc.
 
-Thanks to Dan York for his Tutorial on using Markdown for writing IETF drafts.
+Thanks to Dan York for his Tutorial on using Markdown (specificially mmark) for writing IETF drafts.
 
 Thanks to YOUR NAME HERE for contributions, reviews, etc.
