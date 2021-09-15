@@ -68,7 +68,6 @@ Authoritative DNS over TLS is intended to provide the following for communicatio
 
 *   Enable discovery of support for ADoT by use of SVCB, specifically using the RRTYPE "DNS" (service binding for DNS)
 *   Validate the name server names serving specific domain names/zones, by use of DS records which encode the NS delegation names
-*   Validate any necessray glue IP addresses (non-authoritive IP addresses included in the Additional section) of those name server names, by use of DS records for the domain serving the NS names, or by indirect validation of NS names of the server names for the NS domain
 *   Validate the TLS certificates used for the TLS connection to the server names at the corresponding IP addresses, either directly (End Entity) or indirectly (Sigining Certifiate) obtained by TLSA lookup
 *   Authenticate the server name by requiring a match between the server name and the TLS certificate sent by the server on the TLS connection
 *   Provide privacy via the end-to-end encrypted transport provided by TLS session which was validated by the above components
@@ -120,7 +119,6 @@ The zone example.net would include the records:
 
         ns1.example.net. IN DNS 1 "."
         ns2.example.net. IN DNS 1 "." alpn=dot
-        (plus A/AAAA records for these servers).
 
 The first parameter is the SvcPriority, which must be non-zero (zero indicates AliasForm SVCB record type). Note that it is possible to use different SvcPriority, directing resolvers to prefer non-DoT over DoT or vice versa. This would be appropriate based on the resolver's local policy, and potentially support mandatory use of DoT if present on any server in the NS RRset.
 
@@ -136,9 +134,8 @@ In the above example, ns2.example.net supports DNS over TLS, and would need to h
 
 ## Signaling DNS Transport for a Name Server
 
-This transport signaling MUST only be trusted if the name server names for the domain containing the relevant name servers' names are protected with [@?I-D.dickson-dnsop-ds-hack] (the DS hack).
+This transport signaling MUST only be trusted if the name server names for the domain containing the relevant name servers' names are protected with [@?I-D.dickson-dnsop-ds-hack] and validated. 
 The name servers must also be in a DNSSEC signed zone (i.e. securely delegated where the delegation has been successfully DNSSEC validated).
-Similarly, any other NS names must be protected with [@?I-D.dickson-dnsop-ds-hack], and glue A and AAAA records required must also be protected with [@?I-D.dickson-dnsop-ds-hack].
 
 The specific DNS transport that a name server supports is indicated via use of an RRSet of RRTYPE "DNS". This is a SVCB binding, and normally will use the TargetName of "." (meaning the same name). The default ALPN (transport mechanisms) are TCP/53 and UDP/53. The ADoT transport support is signaled by "alpn=dot". There is an existing entry for "dot" in the ALPN table, with port TCP/853.
 
@@ -167,13 +164,9 @@ In this example, ns1 does not have ADoT support (since the DNS record excludes t
 
 # Validation Using DS Records, DNS Records, TLSA Records, and DNSSEC Validation
 
-These records are used to validate corresponding delegation records, glue, DNS records, and TLSA records, as follows:
+These records are used to validate corresponding delegation records, DNS records, and TLSA records, as follows:
 
 *   Initial domain NS records are validated using [@?I-D.dickson-dnsop-ds-hack]
-*   The respective name server names' domain's NS records are validated using [@?I-D.dickson-dnsop-ds-hack]
-*   If served by a different zone, the NS records of those respective name server names' domain's are also validated using [@?I-D.dickson-dnsop-ds-hack]
-*   Glue A records (if present) are validated using [@?I-D.dickson-dnsop-ds-hack]
-*   Glue AAAA records (if present) are validated using [@?I-D.dickson-dnsop-ds-hack]
 *   All DS records imlementing [@?I-D.dickson-dnsop-ds-hack] must be DNSSEC validated prior to use
 *   Once the NS names have been validated, and the delegations to the appropriate name servers are validated, the DNS records for the NS name are obtained to identify the DNS transport methods supported.
 *   If ADoT is among the supported transports, the TLSA record for the name server is obtained, and used for verification of the TLS certificate when making the TLS connection.
