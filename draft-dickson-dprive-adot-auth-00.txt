@@ -74,7 +74,7 @@ Table of Contents
      5.1.  Server DNS Transport Support Signaling  . . . . . . . . .   4
        5.1.1.  Prerequisite: New SVCB Binding for DNS and DoT  . . .   5
        5.1.2.  Example . . . . . . . . . . . . . . . . . . . . . . .   5
-     5.2.  DANE TLSA Records for ADoT  . . . . . . . . . . . . . . .   6
+     5.2.  DANE TLSA Records for ADoT  . . . . . . . . . . . . . . .   5
        5.2.1.  Example . . . . . . . . . . . . . . . . . . . . . . .   6
      5.3.  Signaling DNS Transport for a Name Server . . . . . . . .   6
        5.3.1.  Example . . . . . . . . . . . . . . . . . . . . . . .   6
@@ -82,15 +82,15 @@ Table of Contents
        5.4.1.  Example . . . . . . . . . . . . . . . . . . . . . . .   7
    6.  Validation Using DS Records, DNS Records, TLSA Records, and
            DNSSEC Validation . . . . . . . . . . . . . . . . . . . .   7
-   7.  Signaling Support and Desire for ADoT . . . . . . . . . . . .   8
+   7.  Signaling Support and Desire for ADoT . . . . . . . . . . . .   7
      7.1.  Server Side Support Signaling . . . . . . . . . . . . . .   8
-     7.2.  Client Side Desire Signaling  . . . . . . . . . . . . . .   9
-   8.  Security Considerations . . . . . . . . . . . . . . . . . . .   9
-   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   9
-   10. Normative References  . . . . . . . . . . . . . . . . . . . .   9
+     7.2.  Client Side Desire Signaling  . . . . . . . . . . . . . .   8
+   8.  Security Considerations . . . . . . . . . . . . . . . . . . .   8
+   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   8
+   10. Normative References  . . . . . . . . . . . . . . . . . . . .   8
    11. Informative References  . . . . . . . . . . . . . . . . . . .   9
-   Appendix A.  Acknowledgments  . . . . . . . . . . . . . . . . . .  10
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  10
+   Appendix A.  Acknowledgments  . . . . . . . . . . . . . . . . . .   9
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .   9
 
 1.  Introduction
 
@@ -142,12 +142,6 @@ Internet-Draft             Authenticated ADoT             September 2021
    *  Validate the name server names serving specific domain names/
       zones, by use of DS records which encode the NS delegation names
 
-   *  Validate any necessray glue IP addresses (non-authoritive IP
-      addresses included in the Additional section) of those name server
-      names, by use of DS records for the domain serving the NS names,
-      or by indirect validation of NS names of the server names for the
-      NS domain
-
    *  Validate the TLS certificates used for the TLS connection to the
       server names at the corresponding IP addresses, either directly
       (End Entity) or indirectly (Sigining Certifiate) obtained by TLSA
@@ -160,6 +154,12 @@ Internet-Draft             Authenticated ADoT             September 2021
    *  Provide privacy via the end-to-end encrypted transport provided by
       TLS session which was validated by the above components
 
+   This protocol depends on correct configuration and operation of the
+   respective components, and that those are maintained according to
+   Best Current Practices:
+
+   *  DS records for the protection of the delegation to the authoritive
+      name servers
 
 
 
@@ -169,13 +169,6 @@ Dickson                   Expires 18 March 2022                 [Page 3]
 
 Internet-Draft             Authenticated ADoT             September 2021
 
-
-   This protocol depends on correct configuration and operation of the
-   respective components, and that those are maintained according to
-   Best Current Practices:
-
-   *  DS records for the protection of the delegation to the authoritive
-      name servers
 
    *  DNSSEC signing of the zone serving the authoritative name servers'
       names
@@ -217,6 +210,13 @@ Internet-Draft             Authenticated ADoT             September 2021
    The record type is "DNS", which is a specific instance of SVCB with
    unique RRTYPE.
 
+   The zone serving the record MUST be DNSSEC signed.  The absence of
+   the DNS RRTYPE is proven by the NSEC(3) record, or the DNS RRTYPE
+   plus RRSIG is returned in response to a query for this record.
+
+
+
+
 
 
 
@@ -225,10 +225,6 @@ Dickson                   Expires 18 March 2022                 [Page 4]
 
 Internet-Draft             Authenticated ADoT             September 2021
 
-
-   The zone serving the record MUST be DNSSEC signed.  The absence of
-   the DNS RRTYPE is proven by the NSEC(3) record, or the DNS RRTYPE
-   plus RRSIG is returned in response to a query for this record.
 
 5.1.1.  Prerequisite: New SVCB Binding for DNS and DoT
 
@@ -261,7 +257,6 @@ Internet-Draft             Authenticated ADoT             September 2021
 
        ns1.example.net. IN DNS 1 "."
        ns2.example.net. IN DNS 1 "." alpn=dot
-       (plus A/AAAA records for these servers).
 
    The first parameter is the SvcPriority, which must be non-zero (zero
    indicates AliasForm SVCB record type).  Note that it is possible to
@@ -269,18 +264,6 @@ Internet-Draft             Authenticated ADoT             September 2021
    DoT or vice versa.  This would be appropriate based on the resolver's
    local policy, and potentially support mandatory use of DoT if present
    on any server in the NS RRset.
-
-
-
-
-
-
-
-
-Dickson                   Expires 18 March 2022                 [Page 5]
-
-Internet-Draft             Authenticated ADoT             September 2021
-
 
 5.2.  DANE TLSA Records for ADoT
 
@@ -290,6 +273,14 @@ Internet-Draft             Authenticated ADoT             September 2021
    valid TLSA record type is permitted.  The use of types 0 and 1 is NOT
    RECOMMENDED.  The use of type 2 TLSA records may provide more
    flexibility in provisioning, including use of wild cards.
+
+
+
+
+Dickson                   Expires 18 March 2022                 [Page 5]
+
+Internet-Draft             Authenticated ADoT             September 2021
+
 
 5.2.1.  Example
 
@@ -302,12 +293,9 @@ Internet-Draft             Authenticated ADoT             September 2021
 
    This transport signaling MUST only be trusted if the name server
    names for the domain containing the relevant name servers' names are
-   protected with [I-D.dickson-dnsop-ds-hack] (the DS hack).  The name
+   protected with [I-D.dickson-dnsop-ds-hack] and validated.  The name
    servers must also be in a DNSSEC signed zone (i.e. securely delegated
    where the delegation has been successfully DNSSEC validated).
-   Similarly, any other NS names must be protected with
-   [I-D.dickson-dnsop-ds-hack], and glue A and AAAA records required
-   must also be protected with [I-D.dickson-dnsop-ds-hack].
 
    The specific DNS transport that a name server supports is indicated
    via use of an RRSet of RRTYPE "DNS".  This is a SVCB binding, and
@@ -329,15 +317,6 @@ Internet-Draft             Authenticated ADoT             September 2021
    A domain inherits the signaled transport for the name servers serving
    the domain.
 
-
-
-
-
-Dickson                   Expires 18 March 2022                 [Page 6]
-
-Internet-Draft             Authenticated ADoT             September 2021
-
-
    This transport signaling MUST only be trusted for use of ADoT if the
    delegated name server names for the domain are protected with
    [I-D.dickson-dnsop-ds-hack].
@@ -347,6 +326,17 @@ Internet-Draft             Authenticated ADoT             September 2021
    signaled for "A" and "B" being applied to the domain being delegated.
    This transport will include ADoT IFF the transport for "A" and "B"
    has included ADoT via DNS records.
+
+
+
+
+
+
+
+Dickson                   Expires 18 March 2022                 [Page 6]
+
+Internet-Draft             Authenticated ADoT             September 2021
+
 
 5.4.1.  Example
 
@@ -365,34 +355,13 @@ Internet-Draft             Authenticated ADoT             September 2021
     Validation
 
    These records are used to validate corresponding delegation records,
-   glue, DNS records, and TLSA records, as follows:
+   DNS records, and TLSA records, as follows:
 
    *  Initial domain NS records are validated using
       [I-D.dickson-dnsop-ds-hack]
 
-   *  The respective name server names' domain's NS records are
-      validated using [I-D.dickson-dnsop-ds-hack]
-
-   *  If served by a different zone, the NS records of those respective
-      name server names' domain's are also validated using
-      [I-D.dickson-dnsop-ds-hack]
-
-   *  Glue A records (if present) are validated using
-      [I-D.dickson-dnsop-ds-hack]
-
-   *  Glue AAAA records (if present) are validated using
-      [I-D.dickson-dnsop-ds-hack]
-
    *  All DS records imlementing [I-D.dickson-dnsop-ds-hack] must be
       DNSSEC validated prior to use
-
-
-
-
-Dickson                   Expires 18 March 2022                 [Page 7]
-
-Internet-Draft             Authenticated ADoT             September 2021
-
 
    *  Once the NS names have been validated, and the delegations to the
       appropriate name servers are validated, the DNS records for the NS
@@ -411,6 +380,20 @@ Internet-Draft             Authenticated ADoT             September 2021
    "Always", "Upon Request", and "Never"; and "Force", "If Available",
    and "Never".
 
+
+
+
+
+
+
+
+
+
+Dickson                   Expires 18 March 2022                 [Page 7]
+
+Internet-Draft             Authenticated ADoT             September 2021
+
+
 7.1.  Server Side Support Signaling
 
    A DNS server (e.g. recursive resolver or forwarder) MAY signal to
@@ -425,30 +408,6 @@ Internet-Draft             Authenticated ADoT             September 2021
    the server understands the option, but does not perform ADoT.
    Generally this would be used to allow a client to track changes in
    the status, if the client is interested in uses of ADoT.)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Dickson                   Expires 18 March 2022                 [Page 8]
-
-Internet-Draft             Authenticated ADoT             September 2021
-
 
 7.2.  Client Side Desire Signaling
 
@@ -481,6 +440,16 @@ Internet-Draft             Authenticated ADoT             September 2021
 
 10.  Normative References
 
+
+
+
+
+
+Dickson                   Expires 18 March 2022                 [Page 8]
+
+Internet-Draft             Authenticated ADoT             September 2021
+
+
    [RFC7858]  Hu, Z., Zhu, L., Heidemann, J., Mankin, A., Wessels, D.,
               and P. Hoffman, "Specification for DNS over Transport
               Layer Security (TLS)", RFC 7858, DOI 10.17487/RFC7858, May
@@ -495,16 +464,6 @@ Internet-Draft             Authenticated ADoT             September 2021
               <https://www.rfc-editor.org/info/rfc8484>.
 
 11.  Informative References
-
-
-
-
-
-
-Dickson                   Expires 18 March 2022                 [Page 9]
-
-Internet-Draft             Authenticated ADoT             September 2021
-
 
    [I-D.dickson-dnsop-ds-hack]
               Dickson, B., "DS Algorithms for Securing NS and Glue",
@@ -542,19 +501,4 @@ Author's Address
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Dickson                   Expires 18 March 2022                [Page 10]
+Dickson                   Expires 18 March 2022                 [Page 9]
