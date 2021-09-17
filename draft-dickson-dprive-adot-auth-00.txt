@@ -4,8 +4,8 @@
 
 Network Working Group                                         B. Dickson
 Internet-Draft                                                   GoDaddy
-Intended status: Informational                         15 September 2021
-Expires: 19 March 2022
+Intended status: Informational                         16 September 2021
+Expires: 20 March 2022
 
 
           Authenticated DNS over TLS to Authoritative Servers
@@ -40,7 +40,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 19 March 2022.
+   This Internet-Draft will expire on 20 March 2022.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Dickson                   Expires 19 March 2022                 [Page 1]
+Dickson                   Expires 20 March 2022                 [Page 1]
 
 Internet-Draft             Authenticated ADoT             September 2021
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Dickson                   Expires 19 March 2022                 [Page 2]
+Dickson                   Expires 20 March 2022                 [Page 2]
 
 Internet-Draft             Authenticated ADoT             September 2021
 
@@ -165,7 +165,7 @@ Internet-Draft             Authenticated ADoT             September 2021
 
 
 
-Dickson                   Expires 19 March 2022                 [Page 3]
+Dickson                   Expires 20 March 2022                 [Page 3]
 
 Internet-Draft             Authenticated ADoT             September 2021
 
@@ -221,7 +221,7 @@ Internet-Draft             Authenticated ADoT             September 2021
 
 
 
-Dickson                   Expires 19 March 2022                 [Page 4]
+Dickson                   Expires 20 March 2022                 [Page 4]
 
 Internet-Draft             Authenticated ADoT             September 2021
 
@@ -277,7 +277,7 @@ Internet-Draft             Authenticated ADoT             September 2021
 
 
 
-Dickson                   Expires 19 March 2022                 [Page 5]
+Dickson                   Expires 20 March 2022                 [Page 5]
 
 Internet-Draft             Authenticated ADoT             September 2021
 
@@ -333,7 +333,7 @@ Internet-Draft             Authenticated ADoT             September 2021
 
 
 
-Dickson                   Expires 19 March 2022                 [Page 6]
+Dickson                   Expires 20 March 2022                 [Page 6]
 
 Internet-Draft             Authenticated ADoT             September 2021
 
@@ -389,7 +389,7 @@ Internet-Draft             Authenticated ADoT             September 2021
 
 
 
-Dickson                   Expires 19 March 2022                 [Page 7]
+Dickson                   Expires 20 March 2022                 [Page 7]
 
 Internet-Draft             Authenticated ADoT             September 2021
 
@@ -445,7 +445,7 @@ Internet-Draft             Authenticated ADoT             September 2021
 
 
 
-Dickson                   Expires 19 March 2022                 [Page 8]
+Dickson                   Expires 20 March 2022                 [Page 8]
 
 Internet-Draft             Authenticated ADoT             September 2021
 
@@ -501,7 +501,7 @@ Internet-Draft             Authenticated ADoT             September 2021
 
 
 
-Dickson                   Expires 19 March 2022                 [Page 9]
+Dickson                   Expires 20 March 2022                 [Page 9]
 
 Internet-Draft             Authenticated ADoT             September 2021
 
@@ -557,7 +557,7 @@ Internet-Draft             Authenticated ADoT             September 2021
 
 
 
-Dickson                   Expires 19 March 2022                [Page 10]
+Dickson                   Expires 20 March 2022                [Page 10]
 
 Internet-Draft             Authenticated ADoT             September 2021
 
@@ -613,4 +613,4 @@ Author's Address
 
 
 
-Dickson                   Expires 19 March 2022                [Page 11]
+Dickson                   Expires 20 March 2022                [Page 11]
