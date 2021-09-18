@@ -30,10 +30,10 @@ Authoritative DNS over TLS is intended to provide the following for communicatio
 
 The following are new protocol components, which are either included in this document, or are in other documents. Some are strictly required, while others are strongly suggested components to allow better scalability and performance. Some of the new elements are aliases to already documented standards, for purposes of these improvements.
 
-Element | New/Alias/OPT | Format | Required | Description
-------- | ------------- | ------ | -------- | -----------
+Element | New/Alias/OPT | Format/Base | Required | Description
+------- | ------------- | ----------- | -------- | -----------
 DNST | Alias | SVCB | Spec: Y DNS: N | DNS Transport - support for DoT
-TLSADOT | Alias | TLSA | Spec: Opt DNS: Y/TLSA | TLSA without prefixing
+TLSADOT | Alias | TLSA | Spec: Opt DNS: Yes or TLSA | TLSA without prefixing
 ADOTD | New | OPT RR | N | Signal desire for ADOT (client-resolver)
 ADOTA | New | OPT RR | N | Signal availablity of ADOT (resolver-client)
 NSECD | New | OPT RR | N | Signal desire for NSEC(3) for [@!RFC8198]

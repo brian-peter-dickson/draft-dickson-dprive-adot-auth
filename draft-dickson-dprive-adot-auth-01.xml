@@ -54,7 +54,7 @@ when, and only when, they appear in all capitals, as shown here.</t>
 <tr>
 <th>Element</th>
 <th>New/Alias/OPT</th>
-<th>Format</th>
+<th>Format/Base</th>
 <th>Required</th>
 <th>Description</th>
 </tr>
@@ -73,7 +73,7 @@ when, and only when, they appear in all capitals, as shown here.</t>
 <td>TLSADOT</td>
 <td>Alias</td>
 <td>TLSA</td>
-<td>Spec: Opt DNS: Y/TLSA</td>
+<td>Spec: Opt DNS: Yes or TLSA</td>
 <td>TLSA without prefixing</td>
 </tr>
 

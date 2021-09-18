@@ -170,29 +170,30 @@ Dickson                   Expires 21 March 2022                 [Page 3]
 Internet-Draft             Authenticated ADoT             September 2021
 
 
-   +=======+============+======+=========+=============================+
-   |Element| New/Alias/ |Format|Required |Description                  |
-   |       | OPT        |      |         |                             |
-   +=======+============+======+=========+=============================+
-   |DNST   | Alias      |SVCB  |Spec: Y  |DNS Transport - support for  |
-   |       |            |      |DNS: N   |DoT                          |
-   +-------+------------+------+---------+-----------------------------+
-   |TLSADOT| Alias      |TLSA  |Spec: Opt|TLSA without prefixing       |
-   |       |            |      |DNS: Y/  |                             |
-   |       |            |      |TLSA     |                             |
-   +-------+------------+------+---------+-----------------------------+
-   |ADOTD  | New        |OPT RR|N        |Signal desire for ADOT       |
-   |       |            |      |         |(client-resolver)            |
-   +-------+------------+------+---------+-----------------------------+
-   |ADOTA  | New        |OPT RR|N        |Signal availablity of ADOT   |
-   |       |            |      |         |(resolver-client)            |
-   +-------+------------+------+---------+-----------------------------+
-   |NSECD  | New        |OPT RR|N        |Signal desire for NSEC(3) for|
-   |       |            |      |         |[RFC8198]                    |
-   +-------+------------+------+---------+-----------------------------+
-   |NSV    | New        |DNSKEY|Y        |Protect NS - see             |
-   |       |            |Alg   |         |[I-D.dickson-dnsop-ds-hack]  |
-   +-------+------------+------+---------+-----------------------------+
+   +=======+============+=======+========+=============================+
+   |Element| New/Alias/ |Format/|Required|Description                  |
+   |       | OPT        |Base   |        |                             |
+   +=======+============+=======+========+=============================+
+   |DNST   | Alias      |SVCB   |Spec: Y |DNS Transport - support for  |
+   |       |            |       |DNS: N  |DoT                          |
+   +-------+------------+-------+--------+-----------------------------+
+   |TLSADOT| Alias      |TLSA   |Spec:   |TLSA without prefixing       |
+   |       |            |       |Opt DNS:|                             |
+   |       |            |       |Yes or  |                             |
+   |       |            |       |TLSA    |                             |
+   +-------+------------+-------+--------+-----------------------------+
+   |ADOTD  | New        |OPT RR |N       |Signal desire for ADOT       |
+   |       |            |       |        |(client-resolver)            |
+   +-------+------------+-------+--------+-----------------------------+
+   |ADOTA  | New        |OPT RR |N       |Signal availablity of ADOT   |
+   |       |            |       |        |(resolver-client)            |
+   +-------+------------+-------+--------+-----------------------------+
+   |NSECD  | New        |OPT RR |N       |Signal desire for NSEC(3) for|
+   |       |            |       |        |[RFC8198]                    |
+   +-------+------------+-------+--------+-----------------------------+
+   |NSV    | New        |DNSKEY |Y       |Protect NS - see             |
+   |       |            |Alg    |        |[I-D.dickson-dnsop-ds-hack]  |
+   +-------+------------+-------+--------+-----------------------------+
 
                                   Table 1
 
@@ -216,8 +217,7 @@ Internet-Draft             Authenticated ADoT             September 2021
    *  Ongoing management of RRSIGs on a timely basis (avoiding RRSIG
       expiry)
 
-   *  Ensuring TLSA records are kept synchronized with the TLS
-      certificates used
+
 
 
 
@@ -225,6 +225,9 @@ Dickson                   Expires 21 March 2022                 [Page 4]
 
 Internet-Draft             Authenticated ADoT             September 2021
 
+
+   *  Ensuring TLSA records are kept synchronized with the TLS
+      certificates used
 
    *  Proper management of TLS private keys for TLS certificates used
 
@@ -269,9 +272,6 @@ Internet-Draft             Authenticated ADoT             September 2021
    mandatory TargetName (which will normally be ".", indicating the
    target is the same as the record owner name).  The default binding is
    the standard DNS ports, UDP/53 and TCP/53.
-
-
-
 
 
 
