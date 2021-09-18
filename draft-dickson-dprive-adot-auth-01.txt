@@ -516,28 +516,28 @@ Internet-Draft             Authenticated ADoT             September 2021
    Suppose the following entries are present at their respective TLD
    authority servers, delegating to the respective authority servers:
 
-    // (Single NS for brevity only, please use 2 NS minimum )
-// Unsigned delegations to various single-operator servers
-example2.com NS ns1.example2.net. // all support ADoT
-example3.com NS ns2.example2.net. // all support ADoT
-example4.com NS ns3.example2.net. // all support ADoT
-example5.com NS ns4.example2.net. // all support ADoT
+       // (Single NS for brevity only, please use 2 NS minimum )
+   // Unsigned delegations to various single-operator servers
+   example2.com NS ns1.example2.net. // all support ADoT
+   example3.com NS ns2.example2.net. // all support ADoT
+   example4.com NS ns3.example2.net. // all support ADoT
+   example5.com NS ns4.example2.net. // all support ADoT
 
-    // Zone serving NS data for single-operator's servers
-example2.net NS ns1.infra2.example
-example2.net NS ns2.infra2.example
-example2.net DS (DS record data)
-// glueless name servers are used
+       // Zone serving NS data for single-operator's servers
+   example2.net NS ns1.infra2.example
+   example2.net NS ns2.infra2.example
+   example2.net DS (DS record data)
+   // glueless name servers are used
 
-    // Special zone serving NS data for same operator's server-name zone
-infra2.example NS ns1-glue.infra2.example
-infra2.example NS ns2-glue.infra2.example
-infra2.example DS (DS record data)
-// Note use of glue for only this zone's delegation
-ns1-glue.infra2.example A (glue A data)
-ns1-glue.infra2.example AAAA (glue AAAA data)
-ns2-glue.infra2.example A (glue A data)
-ns2-glue.infra2.example AAAA (glue AAAA data)
+       // Special zone serving NS data for previous zone
+   infra2.example NS ns1-glue.infra2.example
+   infra2.example NS ns2-glue.infra2.example
+   infra2.example DS (DS record data)
+   // Note use of glue for only this zone's delegation
+   ns1-glue.infra2.example A (glue A data)
+   ns1-glue.infra2.example AAAA (glue AAAA data)
+   ns2-glue.infra2.example A (glue A data)
+   ns2-glue.infra2.example AAAA (glue AAAA data)
 
    Suppose the following additional entries are in the respective
    authority servers for the ADOT signaling/certs:
@@ -567,7 +567,7 @@ Internet-Draft             Authenticated ADoT             September 2021
    example2.net NS ns1.infra2.example
    example2.net NS ns2.infra2.example
    //
-   // SVCB records (DNS Transport) for discovery of ADOT support
+   // SVCB records (DNS Transport) for discovery of support
    // wildcard used for efficiency and caching performance
        *.example2.net DNST 1 "." alpn=dot
    //
