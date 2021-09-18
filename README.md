@@ -294,10 +294,16 @@ Once the initial query or queries for a name server zone has been done, if that 
 Once the initial query for a name server has been done, all of the address and TLS information is available in the cache, and the DOT query can be made upon receipt of the TLD delegation record.
 Once the initial query for a second-level domain has been done, the TLD delegation and all of the address and TLS information is available in the cache, and the DOT query can be made immediately.
 
-Going from a cold cache to populated wildcard name server domain, additional delegation queries require no more trips than those needed for normal UDP queries:
+Once a cache is populated with wildcards from the name server domain, additional delegation queries require no more trips than those needed for normal UDP queries:
+
 1. Query for delegation from TLD, and validate the response
 1. Query for the name server's address(es), and validate the response
-1. Send the query to the authoritive query for the domain with the sensitive name (over TLS or over UDP/TCP, depending on transport supported by the authoritative server)
+1. Send the query to the authoritive server for the domain with the sensitive name (over TLS or over UDP/TCP, depending on transport supported by the authoritative server)
+
+Once a cache is populated with name server addresses and wildcards, additional delegation queries require no more trips than those needed for normal UDP queries:
+
+1. Query for delegation from TLD, and validate the response
+1. Send the query to the authoritive server for the domain with the sensitive name (over TLS or over UDP/TCP, depending on transport supported by the authoritative server)
 
 # Signaling Resolver Support and Client Desire for ADoT
 

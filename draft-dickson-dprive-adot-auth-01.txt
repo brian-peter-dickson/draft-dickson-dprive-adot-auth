@@ -88,13 +88,13 @@ Table of Contents
        7.1.1.  DNS Record Data . . . . . . . . . . . . . . . . . . .  10
        7.1.2.  Resolver Iterative Queries For Final TLS Query  . . .  11
    8.  Signaling Resolver Support and Client Desire for ADoT . . . .  14
-     8.1.  Server Side Support Signaling . . . . . . . . . . . . . .  14
+     8.1.  Server Side Support Signaling . . . . . . . . . . . . . .  15
      8.2.  Client Side Desire Signaling  . . . . . . . . . . . . . .  15
    9.  Security Considerations . . . . . . . . . . . . . . . . . . .  15
    10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  15
    11. Normative References  . . . . . . . . . . . . . . . . . . . .  15
    12. Informative References  . . . . . . . . . . . . . . . . . . .  16
-   Appendix A.  Acknowledgments  . . . . . . . . . . . . . . . . . .  16
+   Appendix A.  Acknowledgments  . . . . . . . . . . . . . . . . . .  17
    Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  17
 
 1.  Introduction
@@ -744,13 +744,28 @@ Internet-Draft             Authenticated ADoT             September 2021
    delegation and all of the address and TLS information is available in
    the cache, and the DOT query can be made immediately.
 
-   Going from a cold cache to populated wildcard name server domain,
+   Once a cache is populated with wildcards from the name server domain,
    additional delegation queries require no more trips than those needed
-   for normal UDP queries: 1.  Query for delegation from TLD, and
-   validate the response 1.  Query for the name server's address(es),
-   and validate the response 1.  Send the query to the authoritive query
-   for the domain with the sensitive name (over TLS or over UDP/TCP,
-   depending on transport supported by the authoritative server)
+   for normal UDP queries:
+
+   1.  Query for delegation from TLD, and validate the response
+
+   2.  Query for the name server's address(es), and validate the
+       response
+
+   3.  Send the query to the authoritive server for the domain with the
+       sensitive name (over TLS or over UDP/TCP, depending on transport
+       supported by the authoritative server)
+
+   Once a cache is populated with name server addresses and wildcards,
+   additional delegation queries require no more trips than those needed
+   for normal UDP queries:
+
+   1.  Query for delegation from TLD, and validate the response
+
+   2.  Send the query to the authoritive server for the domain with the
+       sensitive name (over TLS or over UDP/TCP, depending on transport
+       supported by the authoritative server)
 
 8.  Signaling Resolver Support and Client Desire for ADoT
 
@@ -760,6 +775,16 @@ Internet-Draft             Authenticated ADoT             September 2021
    enumerated set of values and mnemonic codes.  Respectively those are:
    "Always", "Upon Request", and "Never"; and "Force", "If Available",
    and "Never".
+
+
+
+
+
+
+Dickson                   Expires 21 March 2022                [Page 14]
+
+Internet-Draft             Authenticated ADoT             September 2021
+
 
 8.1.  Server Side Support Signaling
 
@@ -775,16 +800,6 @@ Internet-Draft             Authenticated ADoT             September 2021
    the server understands the option, but does not perform ADoT.
    Generally this would be used to allow a client to track changes in
    the status, if the client is interested in uses of ADoT.)
-
-
-
-
-
-
-Dickson                   Expires 21 March 2022                [Page 14]
-
-Internet-Draft             Authenticated ADoT             September 2021
-
 
 8.2.  Client Side Desire Signaling
 
@@ -817,6 +832,16 @@ Internet-Draft             Authenticated ADoT             September 2021
 
 11.  Normative References
 
+
+
+
+
+
+Dickson                   Expires 21 March 2022                [Page 15]
+
+Internet-Draft             Authenticated ADoT             September 2021
+
+
    [RFC6698]  Hoffman, P. and J. Schlyter, "The DNS-Based Authentication
               of Named Entities (DANE) Transport Layer Security (TLS)
               Protocol: TLSA", RFC 6698, DOI 10.17487/RFC6698, August
@@ -830,17 +855,6 @@ Internet-Draft             Authenticated ADoT             September 2021
               Conversations about DNS-Based Authentication of Named
               Entities (DANE)", RFC 7218, DOI 10.17487/RFC7218, April
               2014, <https://www.rfc-editor.org/info/rfc7218>.
-
-
-
-
-
-
-
-Dickson                   Expires 21 March 2022                [Page 15]
-
-Internet-Draft             Authenticated ADoT             September 2021
-
 
    [RFC7858]  Hu, Z., Zhu, L., Heidemann, J., Mankin, A., Wessels, D.,
               and P. Hoffman, "Specification for DNS over Transport
@@ -875,6 +889,15 @@ Internet-Draft             Authenticated ADoT             September 2021
               <https://datatracker.ietf.org/doc/html/draft-dickson-
               dnsop-glueless-00>.
 
+
+
+
+
+Dickson                   Expires 21 March 2022                [Page 16]
+
+Internet-Draft             Authenticated ADoT             September 2021
+
+
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
@@ -890,35 +913,12 @@ Appendix A.  Acknowledgments
 
    Thanks to YOUR NAME HERE for contributions, reviews, etc.
 
-
-
-
-Dickson                   Expires 21 March 2022                [Page 16]
-
-Internet-Draft             Authenticated ADoT             September 2021
-
-
 Author's Address
 
    Brian Dickson
    GoDaddy
 
    Email: brian.peter.dickson@gmail.com
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
