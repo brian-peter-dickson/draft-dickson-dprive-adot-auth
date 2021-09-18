@@ -17,39 +17,56 @@ when, and only when, they appear in all capitals, as shown here.
 
 The result is that the parental side of the zone cut has records needed for DNS resolution  which are not signed  and not validatable.
 
-# Purpose, Requirements, and Limitations
+# Purpose
 
 Authoritative DNS over TLS is intended to provide the following for communications from recursive resolvers to authoritative servers:
 
-*   Enable discovery of support for ADoT by use of SVCB, specifically using the RRTYPE "DNST" (service binding for DNS Transport)
-*   Validate the name server names serving specific domain names/zones, by use of DS records which encode the NS delegation names
-*   Validate the TLS certificates used for the TLS connection to the server names at the corresponding IP addresses, either directly (End Entity) or indirectly (Sigining Certifiate) obtained by TLSA lookup
-*   Authenticate the server name by requiring a match between the server name and the TLS certificate sent by the server on the TLS connection
-*   Provide privacy via the end-to-end encrypted transport provided by TLS session which was validated by the above components
+*   Enable discovery of support for ADoT
+*   Validate the name server name
+*   Validate the server's TLS certificate
+*   Provide channel security using TLS
+
+## New DNS Elements
+
+The following are new protocol components, which are either included in this document, or are in other documents. Some are strictly required, while others are strongly suggested components to allow better scalability and performance. Some of the new elements are aliases to already documented standards, for purposes of these improvements.
+
+Element | New/Alias/OPT | Format | Required | Description
+------- | ------------- | ------ | -------- | -----------
+DNST | Alias | SVCB | Spec: Y DNS: N | DNS Transport - support for DoT
+TLSADOT | Alias | TLSA | Spec: Opt DNS: Y/TLSA | TLSA without prefixing
+ADOTD | New | OPT RR | N | Signal desire for ADOT (client-resolver)
+ADOTA | New | OPT RR | N | Signal availablity of ADOT (resolver-client)
+NSECD | New | OPT RR | N | Signal desire for NSEC(3) for [@!RFC8198]
+NSV | New | DNSKEY Alg | Y | Protect NS - see [@I-D.dickson-dnsop-ds-hack]
+
+# Requirements, and Limitations
 
 This protocol depends on correct configuration and operation of the respective components, and that those are maintained according to Best Current Practices:
 
-*   DS records for the protection of the delegation to the authoritive name servers
-*   DNSSEC signing of the zone serving the authoritative name servers' names
-*   DNSSEC signing of any other zones involved in serving the authoritative name servers' names (e.g. zones containing names of the name servers for the authoritative name servers).
+*   Use of DS records [@I-D.dickson-dnsop-ds-hack] for the protection of the delegation to the authoritive name servers
+*   Use of "glueless" zone(s) for name server names' zone [@I-D.dickson-dnsop-glueless]
+*   DNSSEC signing of the zone serving the authoritative name servers' names [@RFC4034;@RFC4035;RFC5155]
 *   Proper management of key signing material for DNSSEC
 *   Ongoing management of RRSIGs on a timely basis (avoiding RRSIG expiry)
-*   Ensuring TLSA records are kept synchronized with the TLS certificates for the name servers in question doing ADoT
-*   Proper management of TLS private keys for TLS certificates
+*   Ensuring TLSA records are kept synchronized with the TLS certificates used
+*   Proper management of TLS private keys for TLS certificates used
 
 There are external dependencies that impact the system security of any DNSSEC zone, which are inherently unavoidable in establishing this scheme. Specifially, the original DS record enrollment and any updates to the DS records involved in DNSSEC delegations are presumed secure and outside of the scope of the DNS protocol per se.
 
 Other risks relate to normal information security practices, including access controls, role based access, audits, multi-factor authentication, multi-party controls, etc. These are out of scope for this protocol itself.
 
 # DNS Records To Publish for ADoT
+
+ADoT is a property of DNS servers. The signaling is done at the server level, using a DNS record with the same owner name as the server itself (i.e. where the A and AAAA records for the server are published).
+
 ## Server DNS Transport Support Signaling
 
 In order to support ADoT for a DNS server, it is necessary to publish a record specifyig explicit DoT support.
 This record also indicates other supported transports for the DNS server, e.g. the standard ports (TCP and UDP port 53).
 
-The record type is "DNST", which is a specific instance of SVCB with unique RRTYPE.
+The record type is "DNST" (DNS Transport), which is a specific instance of (aka binding for) SVCB with unique RRTYPE.
 
-The zone serving the record MUST be DNSSEC signed. The absence of the DNST RRTYPE is proven by the NSEC(3) record, or the DNST RRTYPE plus RRSIG is returned in response to a query for this record.
+The zone serving the record MUST be DNSSEC signed. The absence of the DNST RRTYPE is proven by the NSEC(3) record, or the DNST RRTYPE plus RRSIG is returned in response to a query for this record if it exists.
 
 ### Prerequisite: New SVCB Binding for DNS and DoT
 
@@ -57,7 +74,9 @@ The zone serving the record MUST be DNSSEC signed. The absence of the DNST RRTYP
 This SVCB binding will be given the RRTYPE value {TBD} with mnemonic name DNST ("DNS Transport").
 Like any SVCB binding, there is a mandatory TargetName (which will normally be ".", indicating the target is the same as the record owner name).
 The default binding is the standard DNS ports, UDP/53 and TCP/53.
-The SVCB binding includes support for an optional ADoT port, which is the standard DoT port TCP/853. This is signaled by "alpn=dot". The actual port number may be overridden with the "port=N" SvcParam.
+
+The SVCB binding includes support for an optional ADoT port, which is the standard DoT port TCP/853. This is signaled by "alpn=dot". The actual port number may be overridden with the "DOTport=N" SvcParam, and the UDP and TCP ports may also be overridden with optional "UDPport=N" and "TCPport=N" SvcParams.
+
 Since DNST is a type-specific binding, it does NOT require the underscore prefix naming that the generic SVCB RRTYPE requires. It may occur anywhere, including at the apex of a DNS zone, and may co-exist with any other type that also permits other types (i.e. anything except CNAME or DNAME).
 
 #### Default Ports for DNS
@@ -68,7 +87,7 @@ This scheme uses an SVCB binding for DNS Transport, DNST. The binding has defaul
 
 The DNST binding uses the defined ALPN for DNS-over-TLS with the assigned label "dot". Use of ADoT is signaled if and only if the the SvcParam of "alpn=dot" is present.
 
-### Example
+### Examples
 
 Suppose the name server ns1.example.net supports only the normal DNS ports, and the name server ns2.example.net supports both the normal ports and ADoT.
 The zone example.net would include the records:
@@ -76,26 +95,32 @@ The zone example.net would include the records:
         ns1.example.net. IN DNST 1 "."
         ns2.example.net. IN DNST 1 "." alpn=dot
 
-The first parameter is the SvcPriority, which must be non-zero (zero indicates AliasForm SVCB record type). Note that it is possible to use different SvcPriority, directing resolvers to prefer non-DoT over DoT or vice versa. This would be appropriate based on the resolver's local policy, and potentially support mandatory use of DoT if present on any server in the NS RRset.
+And similarly, if another zone with many name server names wanted to have a policy of all-ADoT support (i.e. every name server supports ADoT), this could be encoded as:
+
+        *.example2.net DNST 1 "." alpn=dot
+
+In each case, the first parameter is the SvcPriority, which must be non-zero (zero indicates AliasForm SVCB record type).
+
+Note that it is possible for the resolver to use alter or ignore SvcPriority based on its own local policy. For instance, a resolver to prefer non-DoT over DoT or vice versa. Local policy might be to override SvcPriority ordering, and/or ignore some of the records. For example, a resolver might prefer to support mandatory use of DoT if present on any server in the NS RRset.
 
 ## DANE TLSA Records for ADoT
 
-The presence of ADoT requires additionally that a TLSA [@!RFC6698] record be provided. A new RRTYPE is to be created for this as an alias of TLSA, with mnemonic of "ADOTC" (ADOT Certificate). This record will be published at the location NS_NAME, where NS_NAME is the name of the name server. Any valid TLSA RDATA is permitted. The use of Certificate Usage types PKIX-TA and PKIX-EE is NOT RECOMMENDED. The use of Certificate Usage types DANE-TA TLSA records may provide more flexibility in provisioning, including use of wild cards.
+The presence of ADoT requires additionally that a TLSA [@!RFC6698] record be provided. A new RRTYPE is to be created for this as an alias of TLSA, with mnemonic of "TLSADOT" (TLS ADOT Certificate). This record will be published at the location NS_NAME, where NS_NAME is the name of the name server. Any valid TLSA RDATA is permitted. The use of Certificate Usage types PKIX-TA and PKIX-EE is NOT RECOMMENDED. The use of Certificate Usage types DANE-TA TLSA records may provide more flexibility in provisioning, including use of wild cards.
 Per [@!RFC7218;@!RFC6761] the RECOMMENDED Selector and Matching types for this are CERT and FULL, giving the recommended TLSA record type of DANE-TA CERT FULL, with the full encoded certificate.
 
-Note that this ADOTC record is "wildcard friendly". Use of aggressive synthesis by resolvers (per [@!RFC8198]) allows RRTYPE-specific wildcards to be used, avoiding repetitive entries where the RDATA is identical.
+Note that this TLSADOT record is "wildcard friendly". Use of aggressive synthesis by resolvers (per [@!RFC8198]) allows RRTYPE-specific wildcards to be used, avoiding repetitive entries where the RDATA is identical.
 
 ### Example
 
-In the above example, ns2.example.net supports DNS over TLS, and would need to have a TLSA record. The zone would include:
+In the above example, ns2.example.net supports DNS over TLS, and thus would need to have a TLSA record. The zone would include:
 
-        ns2.example.net. IN ADOTC DANE-TA CERT FULL (signing cert)
+        ns2.example.net. IN TLSADOT DANE-TA CERT FULL (signing cert)
 
-If there were another zone containing many DNS server names, example2.net, it would be relatively simple to apply a wildcard record and use a signing cert (rather than end-entity cert) in the ADOTC record).
+If there were another zone containing many DNS server names, example2.net, it would be relatively simple to apply a wildcard record and use a signing cert (rather than end-entity cert) in the TLSADOT record).
 This would allow DNS caching to avoid repeated queries to the authoritative server for the zone containing the DNS server names, to obtain the TLSA-type information.
 This would look like the following:
 
-        *.example2.net IN ADOTC DANE-TA CERT FULL (signing cert)
+        *.example2.net IN TLSADOT DANE-TA CERT FULL (signing cert)
         ns1.example2.net IN A IP_ADDRESS1
         ns2.example2.net IN A IP_ADDRESS2
         ns3.example2.net IN A IP_ADDRESS3
@@ -110,13 +135,13 @@ The specific DNS transport that a name server supports is indicated via use of a
 
 Note that this RRTYPE is also "wildcard friendly". If a DNS zone containing the names of many servers with identical policy (related to ADoT support), those could be managed via one or more wildcard entries.
 
-### Example
-We re-use the same example from above, indicating whether or not individual authoritative name servers support DoT:
+### Examples
+We re-use the same examples from above, indicating whether or not individual authoritative name servers support DoT:
 
         ns1.example.net. IN DNST 1 "."
         ns2.example.net. IN DNST 1 "." alpn=dot
 
-And similarly, if another zone with many name server names wanted to have a policy of all-ADoT support, this could be encoded as:
+And similarly, if another zone with many name server names wanted to have a policy of all-ADoT support (i.e. every name server supports ADoT), this could be encoded as:
 
         *.example2.net DNST 1 "." alpn=dot
 
@@ -128,12 +153,15 @@ This transport signaling MUST only be trusted for use of ADoT if the delegated n
 
 The delegation to NS names "A" and "B", along with the DS record protecting/encoding "A" and "B", results in the DNS transport that is signaled for "A" and "B" being applied to the domain being delegated. This transport will include ADoT IFF the transport for "A" and "B" has included ADoT via DNS records.
 
-### Example
+### Examples
 No additional configutation is needed, beyond use of authority servers which signal DoT support.
-The following example assumes the previous DNS records are provisioned:
+The following examples assumes the previous DNS records are provisioned:
 
-	example.comm NS ns1.example.net.
-	example.comm NS ns2.example.net.
+	example.com NS ns1.example.net. // does not support ADoT
+	example.com NS ns2.example.net. // supports ADoT
+
+	example2.com NS ns1.example2.net. // all support ADoT
+	example2.com NS ns2.example2.net. // all support ADoT
 
 In this example, ns1 does not have ADoT support (since the DNS record excludes the "alpn=dot" parameter), while ns2 does support ADoT (since it includes "alpn=dot").
 
@@ -190,4 +218,3 @@ cases.
 
 This document may or many not have any IANA actions.
 (e.g. if the RRTYPEs, EDNS subtypes, DNSKEY algorithms, etc., are defined in other documents, no IANA actions are needed.)
-
