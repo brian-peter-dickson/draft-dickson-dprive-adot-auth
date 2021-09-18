@@ -121,10 +121,14 @@ This would allow DNS caching to avoid repeated queries to the authoritative serv
 This would look like the following:
 
         *.example2.net IN TLSADOT DANE-TA CERT FULL (signing cert)
-        ns1.example2.net IN A IP_ADDRESS1
-        ns2.example2.net IN A IP_ADDRESS2
-        ns3.example2.net IN A IP_ADDRESS3
-        ns4.example2.net IN A IP_ADDRESS4
+        ns1.example2.net IN A IP4_ADDRESS1
+        ns2.example2.net IN A IP4_ADDRESS2
+        ns3.example2.net IN A IP4_ADDRESS3
+        ns4.example2.net IN A IP4_ADDRESS4
+        ns1.example2.net IN AAAA IP6_ADDRESS1
+        ns2.example2.net IN AAAA IP6_ADDRESS2
+        ns3.example2.net IN AAAA IP6_ADDRESS3
+        ns4.example2.net IN AAAA IP6_ADDRESS4
 
 ## Signaling DNS Transport for a Name Server
 
@@ -176,14 +180,96 @@ These records are used to validate corresponding delegation records, DNS records
 
 ## Complete Example
 
+### DNS Record Data
+
 Suppose a client requests resolution for the IP address of "sensitive-name.example.com".
 Suppose the client's resolver has a "cold" cache without any entries beyond the standard Root Zone and relevant TLD name server records.
 
 Suppose the following entries are present at their respective TLD authority servers, delegating to the respective authority servers:
 
+        // (Single NS for brevity only, please use 2 NS minimum )
+	// Unsigned delegations to various single-operator servers
+	example2.com NS ns1.example2.net. // all support ADoT
+	example3.com NS ns2.example2.net. // all support ADoT
+	example4.com NS ns3.example2.net. // all support ADoT
+	example5.com NS ns4.example2.net. // all support ADoT
+
+        // Zone serving NS data for single-operator's servers
+	example2.net NS ns1.infra2.example
+	example2.net NS ns2.infra2.example
+	example2.net DS (DS record data)
+	// glueless name servers are used
+
+        // Special zone serving NS data for same operator's server-name zone
+	infra2.example NS ns1-glue.infra2.example
+	infra2.example NS ns2-glue.infra2.example
+	infra2.example DS (DS record data)
+	// Note use of glue for only this zone's delegation
+	ns1-glue.infra2.example A (glue A data)
+	ns1-glue.infra2.example AAAA (glue AAAA data)
+	ns2-glue.infra2.example A (glue A data)
+	ns2-glue.infra2.example AAAA (glue AAAA data)
+
+Suppose the following additional entries are in the respective authority servers for the ADOT signaling/certs:
+
+	example2.net SOA ( SOA record data )
+	// glueless name servers are used
+	example2.net NS ns1.infra2.example
+	example2.net NS ns2.infra2.example
+	//
+	// SVCB records (DNS Transport) for discovery of ADOT support
+	// wildcard used for efficiency and caching performance
+        *.example2.net DNST 1 "." alpn=dot
+	//
+	// ADOT TLSA signing cert
+	// wildcard used for efficiency and caching performance
+        *.example2.net IN TLSADOT DANE-TA CERT FULL (signing cert)
+	//
+	// Addresses of name servers serving customer zones
+	// E.g. example2.com to example5.com served on these
+        ns1.example2.net IN A IP4_ADDRESS1
+        ns2.example2.net IN A IP4_ADDRESS2
+        ns3.example2.net IN A IP4_ADDRESS3
+        ns4.example2.net IN A IP4_ADDRESS4
+        ns1.example2.net IN AAAA IP6_ADDRESS1
+        ns2.example2.net IN AAAA IP6_ADDRESS2
+        ns3.example2.net IN AAAA IP6_ADDRESS3
+        ns4.example2.net IN AAAA IP6_ADDRESS4
+	//
+	// plus RRSIGs and NSEC(3) records and their RRSIGs
+
+	infra2.example SOA ( SOA record data )
+	infra2.example NS ns1-glue.infra2.example
+	infra2.example NS ns2-glue.infra2.example
+	ns1-glue.infra2.example A (same as glue A data)
+	ns1-glue.infra2.example AAAA (same as glue AAAA data)
+	ns2-glue.infra2.example A (same as glue A data)
+	ns2-glue.infra2.example AAAA (same as glue AAAA data)
+	//
+	//  name server info for example2.net zone
+	ns1.infra2.example A (glueless A data)
+	ns1.infra2.example AAAA (glueless AAAA data)
+	ns2.infra2.example A (glueless A data)
+	ns2.infra2.example AAAA (glueless AAAA data)
+	//
+	// plus RRSIGs and NSEC(3) records and their RRSIGs
+
+### Resolver Iterative Queries For Final TLS Query
+
+The following are the necessary queries to various servers necessary to do a private TLS-protected lookup.
+
+Several examples are provided in order, from a presumed cold cache state. Root Priming and TLD queries are presumed to already have been complete.
+
+1. Query for sensitive-name.example2.com:
+1. Query for sensitive-name.example3.com:
+1. Query for sensitive-name.example4.com:
+1. Query for sensitive-name.example5.com:
+1. Query for sensitive-name2.example2.com:
+
 FIXME
 
-# Signaling Support and Desire for ADoT
+
+# Signaling Resolver Support and Client Desire for ADoT
 
 The following presume some new OPT sub-types, to be added to the IANA action section or to be split out as separate drafts.
 The sub-type mnemonics are "ADOTA" (available) and "ADOTD" (desired), each with an enumerated set of values and mnemonic codes.
