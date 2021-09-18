@@ -87,15 +87,15 @@ Table of Contents
      7.1.  Complete Example  . . . . . . . . . . . . . . . . . . . .   9
        7.1.1.  DNS Record Data . . . . . . . . . . . . . . . . . . .  10
        7.1.2.  Resolver Iterative Queries For Final TLS Query  . . .  11
-   8.  Signaling Resolver Support and Client Desire for ADoT . . . .  12
-     8.1.  Server Side Support Signaling . . . . . . . . . . . . . .  12
-     8.2.  Client Side Desire Signaling  . . . . . . . . . . . . . .  12
-   9.  Security Considerations . . . . . . . . . . . . . . . . . . .  13
-   10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  13
-   11. Normative References  . . . . . . . . . . . . . . . . . . . .  13
-   12. Informative References  . . . . . . . . . . . . . . . . . . .  14
-   Appendix A.  Acknowledgments  . . . . . . . . . . . . . . . . . .  14
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  14
+   8.  Signaling Resolver Support and Client Desire for ADoT . . . .  14
+     8.1.  Server Side Support Signaling . . . . . . . . . . . . . .  14
+     8.2.  Client Side Desire Signaling  . . . . . . . . . . . . . .  15
+   9.  Security Considerations . . . . . . . . . . . . . . . . . . .  15
+   10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  15
+   11. Normative References  . . . . . . . . . . . . . . . . . . . .  15
+   12. Informative References  . . . . . . . . . . . . . . . . . . .  16
+   Appendix A.  Acknowledgments  . . . . . . . . . . . . . . . . . .  16
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  17
 
 1.  Introduction
 
@@ -624,15 +624,133 @@ Internet-Draft             Authenticated ADoT             September 2021
 
    1.  Query for sensitive-name.example2.com:
 
+       1.  Query for NS for example2.com => get NS ns1.example2.net plus
+           DS => validate the DS and proceed
+
+       2.  Query for NS for example2.net => get NS ns1/
+           ns2.infra2.example plus DS => validate the DS and proceed
+
+       3.  Query for NS for infra2.example2.net => get NS ns1-glue/
+           ns2-glue.infra2.example plus DS plus glue A/AAAA => validate
+           the DS and proceed
+
+       4.  Query with NSECD for A for ns1/ns2.infra2.example => get A
+           for ns1/ns2.infra2.example plus RRSIGs plus NSEC(3) plus
+           RRSIG => validate the RRSIGs and proceed
+
+       5.  Query with NSECD for A for ns1.example2.net => get A for
+           ns1.example2.net plus RRSIG plus NSEC(3) plus RRSIG =>
+           validate the RRSIGs and proceed
+
+       6.  Query with NSECD for DNST for ns1.example2.net => get DNST
+           for *.example2.net plus RRSIG plus special wildcard NSEC(3)s
+           plus RRSIGs => validate the RRSIGs and proceed
+
+       7.  Query with NSECD for TLSADOT for ns1.example2.net => get
+           TLSADOT for *.example2.net plus RRSIG plus special wildcard
+           NSEC(3)s plus RRSIGs => validate the RRSIGs and proceed
+
+       8.  Query over TLS for sensitive-name.example2.com (to
+           ns1.example2.net, match TLS cert chain against DANE-TA cert,
+           only query once TLS established)
+
    2.  Query for sensitive-name.example3.com:
+
+       1.  Query for NS for example2.com => get NS ns1.example2.net plus
+           DS => validate the DS and proceed
+
+       2.  Query with NSECD for A for ns1.example2.net => get A for
+           ns1.example2.net plus RRSIG plus NSEC(3) plus RRSIG =>
+           validate the RRSIGs and proceed
+
+       3.  NB: already have wildcards for DNST and TLSADOT plus NSEC3
+           proving no non-wildcards exist for ns1.example2.net for those
+           types, synthesize DNST and TLSADOT records)
+
+
+
+Dickson                   Expires 21 March 2022                [Page 12]
+
+Internet-Draft             Authenticated ADoT             September 2021
+
+
+       4.  Query over TLS for sensitive-name.example2.com (to
+           ns1.example2.net, match TLS cert chain against DANE-TA cert,
+           only query once TLS established)
 
    3.  Query for sensitive-name.example4.com:
 
+       1.  Query for NS for example2.com => get NS ns1.example2.net plus
+           DS => validate the DS and proceed
+
+       2.  Query with NSECD for A for ns1.example2.net => get A for
+           ns1.example2.net plus RRSIG plus NSEC(3) plus RRSIG =>
+           validate the RRSIGs and proceed
+
+       3.  NB: already have wildcards for DNST and TLSADOT plus NSEC3
+           proving no non-wildcards exist for ns1.example2.net for those
+           types, synthesize DNST and TLSADOT records)
+
+       4.  Query over TLS for sensitive-name.example2.com (to
+           ns1.example2.net, match TLS cert chain against DANE-TA cert,
+           only query once TLS established)
+
    4.  Query for sensitive-name.example5.com:
+
+       1.  Query for NS for example2.com => get NS ns1.example2.net plus
+           DS => validate the DS and proceed
+
+       2.  Query with NSECD for A for ns1.example2.net => get A for
+           ns1.example2.net plus RRSIG plus NSEC(3) plus RRSIG =>
+           validate the RRSIGs and proceed
+
+       3.  NB: already have wildcards for DNST and TLSADOT plus NSEC3
+           proving no non-wildcards exist for ns1.example2.net for those
+           types, synthesize DNST and TLSADOT records)
+
+       4.  Query over TLS for sensitive-name.example2.com (to
+           ns1.example2.net, match TLS cert chain against DANE-TA cert,
+           only query once TLS established)
 
    5.  Query for sensitive-name2.example2.com:
 
-   FIXME
+       1.  (Already have delegation entry for example2.com in cache.)
+
+       2.  (Already have A for ns1.example2.net in cache.)
+
+       3.  (Already have all TLS info in the cache.)
+
+
+
+
+
+
+Dickson                   Expires 21 March 2022                [Page 13]
+
+Internet-Draft             Authenticated ADoT             September 2021
+
+
+       4.  Query over TLS for sensitive-name.example2.com (to
+           ns1.example2.net, match TLS cert chain against DANE-TA cert,
+           only query once TLS established)
+
+   Once the initial query or queries for a name server zone has been
+   done, if that zone uses wildcards for DNST and TLSADOT, the only
+   queries needed for a new name server are the A and/or AAAA records.
+   Once the initial query for a name server has been done, all of the
+   address and TLS information is available in the cache, and the DOT
+   query can be made upon receipt of the TLD delegation record.  Once
+   the initial query for a second-level domain has been done, the TLD
+   delegation and all of the address and TLS information is available in
+   the cache, and the DOT query can be made immediately.
+
+   Going from a cold cache to populated wildcard name server domain,
+   additional delegation queries require no more trips than those needed
+   for normal UDP queries: 1.  Query for delegation from TLD, and
+   validate the response 1.  Query for the name server's address(es),
+   and validate the response 1.  Send the query to the authoritive query
+   for the domain with the sensitive name (over TLS or over UDP/TCP,
+   depending on transport supported by the authoritative server)
 
 8.  Signaling Resolver Support and Client Desire for ADoT
 
@@ -658,6 +776,16 @@ Internet-Draft             Authenticated ADoT             September 2021
    Generally this would be used to allow a client to track changes in
    the status, if the client is interested in uses of ADoT.)
 
+
+
+
+
+
+Dickson                   Expires 21 March 2022                [Page 14]
+
+Internet-Draft             Authenticated ADoT             September 2021
+
+
 8.2.  Client Side Desire Signaling
 
    A DNS client (e.g. stub or forwarder) MAY signal the desire to have
@@ -666,14 +794,6 @@ Internet-Draft             Authenticated ADoT             September 2021
    "Never".  The value "Force" indicates the server should attempt to
    use ADoT, and return a failure code of XXXX and an EDE value of YYYY
    if the authoritative server does not offer ADoT, or any other ADoT
-
-
-
-Dickson                   Expires 21 March 2022                [Page 12]
-
-Internet-Draft             Authenticated ADoT             September 2021
-
-
    failure occurs.  The value "If Available" indicates that the server
    should use ADoT for upstream queries if it is availble, but SHOULD
    NOT allow any downgrades if the authoritative server signals that
@@ -711,6 +831,17 @@ Internet-Draft             Authenticated ADoT             September 2021
               Entities (DANE)", RFC 7218, DOI 10.17487/RFC7218, April
               2014, <https://www.rfc-editor.org/info/rfc7218>.
 
+
+
+
+
+
+
+Dickson                   Expires 21 March 2022                [Page 15]
+
+Internet-Draft             Authenticated ADoT             September 2021
+
+
    [RFC7858]  Hu, Z., Zhu, L., Heidemann, J., Mankin, A., Wessels, D.,
               and P. Hoffman, "Specification for DNS over Transport
               Layer Security (TLS)", RFC 7858, DOI 10.17487/RFC7858, May
@@ -719,16 +850,6 @@ Internet-Draft             Authenticated ADoT             September 2021
    [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/info/rfc8174>.
-
-
-
-
-
-
-Dickson                   Expires 21 March 2022                [Page 13]
-
-Internet-Draft             Authenticated ADoT             September 2021
-
 
    [RFC8198]  Fujiwara, K., Kato, A., and W. Kumari, "Aggressive Use of
               DNSSEC-Validated Cache", RFC 8198, DOI 10.17487/RFC8198,
@@ -769,6 +890,14 @@ Appendix A.  Acknowledgments
 
    Thanks to YOUR NAME HERE for contributions, reviews, etc.
 
+
+
+
+Dickson                   Expires 21 March 2022                [Page 16]
+
+Internet-Draft             Authenticated ADoT             September 2021
+
+
 Author's Address
 
    Brian Dickson
@@ -781,4 +910,43 @@ Author's Address
 
 
 
-Dickson                   Expires 21 March 2022                [Page 14]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Dickson                   Expires 21 March 2022                [Page 17]

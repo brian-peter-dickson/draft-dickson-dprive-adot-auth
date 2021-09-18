@@ -327,13 +327,58 @@ Suppose the client's resolver has a &quot;cold&quot; cache without any entries b
 <t>Several examples are provided in order, from a presumed cold cache state. Root Priming and TLD queries are presumed to already have been complete.</t>
 
 <ol>
-<li>Query for sensitive-name.example2.com:</li>
-<li>Query for sensitive-name.example3.com:</li>
-<li>Query for sensitive-name.example4.com:</li>
-<li>Query for sensitive-name.example5.com:</li>
-<li>Query for sensitive-name2.example2.com:</li>
+<li><t>Query for sensitive-name.example2.com:</t>
+
+<ol>
+<li>Query for NS for example2.com =&gt; get NS ns1.example2.net plus DS =&gt; validate the DS and proceed</li>
+<li>Query for NS for example2.net =&gt; get NS ns1/ns2.infra2.example plus DS =&gt; validate the DS and proceed</li>
+<li>Query for NS for infra2.example2.net =&gt; get NS ns1-glue/ns2-glue.infra2.example plus DS plus glue A/AAAA =&gt; validate the DS and proceed</li>
+<li>Query with NSECD for A for ns1/ns2.infra2.example =&gt; get A for ns1/ns2.infra2.example plus RRSIGs plus NSEC(3) plus RRSIG =&gt; validate the RRSIGs and proceed</li>
+<li>Query with NSECD for A for ns1.example2.net =&gt; get A for ns1.example2.net plus RRSIG plus NSEC(3) plus RRSIG =&gt; validate the RRSIGs and proceed</li>
+<li>Query with NSECD for DNST for ns1.example2.net =&gt; get DNST for *.example2.net plus RRSIG plus special wildcard NSEC(3)s plus RRSIGs =&gt; validate the RRSIGs and proceed</li>
+<li>Query with NSECD for TLSADOT for ns1.example2.net =&gt; get TLSADOT for *.example2.net plus RRSIG plus special wildcard NSEC(3)s plus RRSIGs =&gt; validate the RRSIGs and proceed</li>
+<li>Query over TLS for sensitive-name.example2.com (to ns1.example2.net, match TLS cert chain against DANE-TA cert, only query once TLS established)</li>
+</ol></li>
+<li><t>Query for sensitive-name.example3.com:</t>
+
+<ol>
+<li>Query for NS for example2.com =&gt; get NS ns1.example2.net plus DS =&gt; validate the DS and proceed</li>
+<li>Query with NSECD for A for ns1.example2.net =&gt; get A for ns1.example2.net plus RRSIG plus NSEC(3) plus RRSIG =&gt; validate the RRSIGs and proceed</li>
+<li>NB: already have wildcards for DNST and TLSADOT plus NSEC3 proving no non-wildcards exist for ns1.example2.net for those types, synthesize DNST and TLSADOT records)</li>
+<li>Query over TLS for sensitive-name.example2.com (to ns1.example2.net, match TLS cert chain against DANE-TA cert, only query once TLS established)</li>
+</ol></li>
+<li><t>Query for sensitive-name.example4.com:</t>
+
+<ol>
+<li>Query for NS for example2.com =&gt; get NS ns1.example2.net plus DS =&gt; validate the DS and proceed</li>
+<li>Query with NSECD for A for ns1.example2.net =&gt; get A for ns1.example2.net plus RRSIG plus NSEC(3) plus RRSIG =&gt; validate the RRSIGs and proceed</li>
+<li>NB: already have wildcards for DNST and TLSADOT plus NSEC3 proving no non-wildcards exist for ns1.example2.net for those types, synthesize DNST and TLSADOT records)</li>
+<li>Query over TLS for sensitive-name.example2.com (to ns1.example2.net, match TLS cert chain against DANE-TA cert, only query once TLS established)</li>
+</ol></li>
+<li><t>Query for sensitive-name.example5.com:</t>
+
+<ol>
+<li>Query for NS for example2.com =&gt; get NS ns1.example2.net plus DS =&gt; validate the DS and proceed</li>
+<li>Query with NSECD for A for ns1.example2.net =&gt; get A for ns1.example2.net plus RRSIG plus NSEC(3) plus RRSIG =&gt; validate the RRSIGs and proceed</li>
+<li>NB: already have wildcards for DNST and TLSADOT plus NSEC3 proving no non-wildcards exist for ns1.example2.net for those types, synthesize DNST and TLSADOT records)</li>
+<li>Query over TLS for sensitive-name.example2.com (to ns1.example2.net, match TLS cert chain against DANE-TA cert, only query once TLS established)</li>
+</ol></li>
+<li><t>Query for sensitive-name2.example2.com:</t>
+
+<ol>
+<li>(Already have delegation entry for example2.com in cache.)</li>
+<li>(Already have A for ns1.example2.net in cache.)</li>
+<li>(Already have all TLS info in the cache.)</li>
+<li>Query over TLS for sensitive-name.example2.com (to ns1.example2.net, match TLS cert chain against DANE-TA cert, only query once TLS established)</li>
+</ol></li>
 </ol>
-<t>FIXME</t>
+<t>Once the initial query or queries for a name server zone has been done, if that zone uses wildcards for  DNST and TLSADOT, the only queries needed for a new name server are the A and/or AAAA records.
+Once the initial query for a name server has been done, all of the address and TLS information is available in the cache, and the DOT query can be made upon receipt of the TLD delegation record.
+Once the initial query for a second-level domain has been done, the TLD delegation and all of the address and TLS information is available in the cache, and the DOT query can be made immediately.</t>
+<t>Going from a cold cache to populated wildcard name server domain, additional delegation queries require no more trips than those needed for normal UDP queries:
+1. Query for delegation from TLD, and validate the response
+1. Query for the name server's address(es), and validate the response
+1. Send the query to the authoritive query for the domain with the sensitive name (over TLS or over UDP/TCP, depending on transport supported by the authoritative server)</t>
 </section>
 </section>
 </section>
