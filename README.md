@@ -200,7 +200,7 @@ Suppose the following entries are present at their respective TLD authority serv
 	example2.net DS (DS record data)
 	// glueless name servers are used
 
-        // Special zone serving NS data for same operator's server-name zone
+        // Special zone serving NS data for previous zone
 	infra2.example NS ns1-glue.infra2.example
 	infra2.example NS ns2-glue.infra2.example
 	infra2.example DS (DS record data)
@@ -217,7 +217,7 @@ Suppose the following additional entries are in the respective authority servers
 	example2.net NS ns1.infra2.example
 	example2.net NS ns2.infra2.example
 	//
-	// SVCB records (DNS Transport) for discovery of ADOT support
+	// SVCB records (DNS Transport) for discovery of support
 	// wildcard used for efficiency and caching performance
         *.example2.net DNST 1 "." alpn=dot
 	//
