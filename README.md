@@ -161,11 +161,11 @@ The delegation to NS names "A" and "B", along with the DS record protecting/enco
 No additional configutation is needed, beyond use of authority servers which signal DoT support.
 The following examples assumes the previous DNS records are provisioned:
 
-	example.com NS ns1.example.net. // does not support ADoT
-	example.com NS ns2.example.net. // supports ADoT
+        example.com NS ns1.example.net. // does not support ADoT
+        example.com NS ns2.example.net. // supports ADoT
 
-	example2.com NS ns1.example2.net. // all support ADoT
-	example2.com NS ns2.example2.net. // all support ADoT
+        example2.com NS ns1.example2.net. // all support ADoT
+        example2.com NS ns2.example2.net. // all support ADoT
 
 In this example, ns1 does not have ADoT support (since the DNS record excludes the "alpn=dot" parameter), while ns2 does support ADoT (since it includes "alpn=dot").
 
@@ -188,45 +188,45 @@ Suppose the client's resolver has a "cold" cache without any entries beyond the 
 Suppose the following entries are present at their respective TLD authority servers, delegating to the respective authority servers:
 
         // (Single NS for brevity only, please use 2 NS minimum )
-	// Unsigned delegations to various single-operator servers
-	example2.com NS ns1.example2.net. // all support ADoT
-	example3.com NS ns2.example2.net. // all support ADoT
-	example4.com NS ns3.example2.net. // all support ADoT
-	example5.com NS ns4.example2.net. // all support ADoT
+        // Unsigned delegations to various single-operator servers
+        example2.com NS ns1.example2.net. // all support ADoT
+        example3.com NS ns2.example2.net. // all support ADoT
+        example4.com NS ns3.example2.net. // all support ADoT
+        example5.com NS ns4.example2.net. // all support ADoT
 
         // Zone serving NS data for single-operator's servers
-	example2.net NS ns1.infra2.example
-	example2.net NS ns2.infra2.example
-	example2.net DS (DS record data)
-	// glueless name servers are used
+        example2.net NS ns1.infra2.example
+        example2.net NS ns2.infra2.example
+        example2.net DS (DS record data)
+        // glueless name servers are used
 
         // Special zone serving NS data for previous zone
-	infra2.example NS ns1-glue.infra2.example
-	infra2.example NS ns2-glue.infra2.example
-	infra2.example DS (DS record data)
-	// Note use of glue for only this zone's delegation
-	ns1-glue.infra2.example A (glue A data)
-	ns1-glue.infra2.example AAAA (glue AAAA data)
-	ns2-glue.infra2.example A (glue A data)
-	ns2-glue.infra2.example AAAA (glue AAAA data)
+        infra2.example NS ns1-glue.infra2.example
+        infra2.example NS ns2-glue.infra2.example
+        infra2.example DS (DS record data)
+        // Note use of glue for only this zone's delegation
+        ns1-glue.infra2.example A (glue A data)
+        ns1-glue.infra2.example AAAA (glue AAAA data)
+        ns2-glue.infra2.example A (glue A data)
+        ns2-glue.infra2.example AAAA (glue AAAA data)
 
 Suppose the following additional entries are in the respective authority servers for the ADOT signaling/certs:
 
-	example2.net SOA ( SOA record data )
-	// glueless name servers are used
-	example2.net NS ns1.infra2.example
-	example2.net NS ns2.infra2.example
-	//
-	// SVCB records (DNS Transport) for discovery of support
-	// wildcard used for efficiency and caching performance
+        example2.net SOA ( SOA record data )
+        // glueless name servers are used
+        example2.net NS ns1.infra2.example
+        example2.net NS ns2.infra2.example
+        //
+        // SVCB records (DNS Transport) for discovery of support
+        // wildcard used for efficiency and caching performance
         *.example2.net DNST 1 "." alpn=dot
-	//
-	// ADOT TLSA signing cert
-	// wildcard used for efficiency and caching performance
+        //
+        // ADOT TLSA signing cert
+        // wildcard used for efficiency and caching performance
         *.example2.net IN TLSADOT DANE-TA CERT FULL (signing cert)
-	//
-	// Addresses of name servers serving customer zones
-	// E.g. example2.com to example5.com served on these
+        //
+        // Addresses of name servers serving customer zones
+        // E.g. example2.com to example5.com served on these
         ns1.example2.net IN A IP4_ADDRESS1
         ns2.example2.net IN A IP4_ADDRESS2
         ns3.example2.net IN A IP4_ADDRESS3
@@ -235,24 +235,24 @@ Suppose the following additional entries are in the respective authority servers
         ns2.example2.net IN AAAA IP6_ADDRESS2
         ns3.example2.net IN AAAA IP6_ADDRESS3
         ns4.example2.net IN AAAA IP6_ADDRESS4
-	//
-	// plus RRSIGs and NSEC(3) records and their RRSIGs
+        //
+        // plus RRSIGs and NSEC(3) records and their RRSIGs
 
-	infra2.example SOA ( SOA record data )
-	infra2.example NS ns1-glue.infra2.example
-	infra2.example NS ns2-glue.infra2.example
-	ns1-glue.infra2.example A (same as glue A data)
-	ns1-glue.infra2.example AAAA (same as glue AAAA data)
-	ns2-glue.infra2.example A (same as glue A data)
-	ns2-glue.infra2.example AAAA (same as glue AAAA data)
-	//
-	//  name server info for example2.net zone
-	ns1.infra2.example A (glueless A data)
-	ns1.infra2.example AAAA (glueless AAAA data)
-	ns2.infra2.example A (glueless A data)
-	ns2.infra2.example AAAA (glueless AAAA data)
-	//
-	// plus RRSIGs and NSEC(3) records and their RRSIGs
+        infra2.example SOA ( SOA record data )
+        infra2.example NS ns1-glue.infra2.example
+        infra2.example NS ns2-glue.infra2.example
+        ns1-glue.infra2.example A (same as glue A data)
+        ns1-glue.infra2.example AAAA (same as glue AAAA data)
+        ns2-glue.infra2.example A (same as glue A data)
+        ns2-glue.infra2.example AAAA (same as glue AAAA data)
+        //
+        //  name server info for example2.net zone
+        ns1.infra2.example A (glueless A data)
+        ns1.infra2.example AAAA (glueless AAAA data)
+        ns2.infra2.example A (glueless A data)
+        ns2.infra2.example AAAA (glueless AAAA data)
+        //
+        // plus RRSIGs and NSEC(3) records and their RRSIGs
 
 ### Resolver Iterative Queries For Final TLS Query
 
