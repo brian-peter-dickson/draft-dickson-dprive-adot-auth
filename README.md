@@ -43,7 +43,7 @@ NSV | New | DNSKEY Alg | Y | Protect NS - see [@I-D.dickson-dnsop-ds-hack]
 
 This protocol depends on correct configuration and operation of the respective components, and that those are maintained according to Best Current Practices:
 
-*   Use of DS records [@I-D.dickson-dnsop-ds-hack] for the protection of the delegation to the authoritive name servers
+*   Use of DS records [@I-D.dickson-dnsop-ds-hack] for the protection of the delegation to the authoritative name servers
 *   Use of "glueless" zone(s) for name server names' zone [@I-D.dickson-dnsop-glueless]
 *   DNSSEC signing of the zone serving the authoritative name servers' names [@RFC4034;@RFC4035;RFC5155]
 *   Proper management of key signing material for DNSSEC
@@ -66,7 +66,7 @@ This record also indicates other supported transports for the DNS server, e.g. t
 
 The record type is "DNST" (DNS Transport), which is a specific instance of (aka binding for) SVCB with unique RRTYPE.
 
-The zone serving the record MUST be DNSSEC signed. The absence of the DNST RRTYPE is proven by the NSEC(3) record, or the DNST RRTYPE plus RRSIG is returned in response to a query for this record if it exists.
+The zone serving the record MUST be DNSSEC signed. The absence of the DNST RRTYPE is proved by the NSEC(3) record, or else the DNST RRTYPE plus RRSIG is returned in response to a query for this record if it exists.
 
 ### Prerequisite: New SVCB Binding for DNS and DoT
 
@@ -77,7 +77,7 @@ The default binding is the standard DNS ports, UDP/53 and TCP/53.
 
 The SVCB binding includes support for an optional ADoT port, which is the standard DoT port TCP/853. This is signaled by "alpn=dot". The actual port number may be overridden with the "DOTport=N" SvcParam, and the UDP and TCP ports may also be overridden with optional "UDPport=N" and "TCPport=N" SvcParams.
 
-Since DNST is a type-specific binding, it does NOT require the underscore prefix naming that the generic SVCB RRTYPE requires. It may occur anywhere, including at the apex of a DNS zone, and may co-exist with any other type that also permits other types (i.e. anything except CNAME or DNAME).
+Since DNST is a type-specific binding, it does NOT require the underscore prefix naming that the generic SVCB RRTYPE requires. It may occur anywhere, including at the apex of a DNS zone, and may co-exist with any other type that also permits other types.
 
 #### Default Ports for DNS
 
@@ -106,7 +106,7 @@ Note that it is possible for the resolver to use alter or ignore SvcPriority bas
 ## DANE TLSA Records for ADoT
 
 The presence of ADoT requires additionally that a TLSA [@!RFC6698] record be provided. A new RRTYPE is to be created for this as an alias of TLSA, with mnemonic of "TLSADOT" (TLS ADOT Certificate). This record will be published at the location NS_NAME, where NS_NAME is the name of the name server. Any valid TLSA RDATA is permitted. The use of Certificate Usage types PKIX-TA and PKIX-EE is NOT RECOMMENDED. The use of Certificate Usage types DANE-TA TLSA records may provide more flexibility in provisioning, including use of wild cards.
-Per [@!RFC7218;@!RFC6761] the RECOMMENDED Selector and Matching types for this are CERT and FULL, giving the recommended TLSA record type of DANE-TA CERT FULL, with the full encoded certificate.
+Per [@!RFC7218;@!RFC7671] the RECOMMENDED Selector and Matching types for this are SPKI and SHA2-256, giving the recommended TLSA record type of DANE-TA SPKI SHA2-256, with the full encoded certificate.
 
 Note that this TLSADOT record is "wildcard friendly". Use of aggressive synthesis by resolvers (per [@!RFC8198]) allows RRTYPE-specific wildcards to be used, avoiding repetitive entries where the RDATA is identical.
 
@@ -114,13 +114,13 @@ Note that this TLSADOT record is "wildcard friendly". Use of aggressive synthesi
 
 In the above example, ns2.example.net supports DNS over TLS, and thus would need to have a TLSA record. The zone would include:
 
-        ns2.example.net. IN TLSADOT DANE-TA CERT FULL (signing cert)
+        ns2.example.net. IN TLSADOT DANE-TA SPKI SHA2-256 (signing cert)
 
 If there were another zone containing many DNS server names, example2.net, it would be relatively simple to apply a wildcard record and use a signing cert (rather than end-entity cert) in the TLSADOT record).
 This would allow DNS caching to avoid repeated queries to the authoritative server for the zone containing the DNS server names, to obtain the TLSA-type information.
 This would look like the following:
 
-        *.example2.net IN TLSADOT DANE-TA CERT FULL (signing cert)
+        *.example2.net IN TLSADOT DANE-TA SPKI SHA2-256 (signing cert)
         ns1.example2.net IN A IP4_ADDRESS1
         ns2.example2.net IN A IP4_ADDRESS2
         ns3.example2.net IN A IP4_ADDRESS3
@@ -158,7 +158,7 @@ This transport signaling MUST only be trusted for use of ADoT if the delegated n
 The delegation to NS names "A" and "B", along with the DS record protecting/encoding "A" and "B", results in the DNS transport that is signaled for "A" and "B" being applied to the domain being delegated. This transport will include ADoT IFF the transport for "A" and "B" has included ADoT via DNS records.
 
 ### Examples
-No additional configutation is needed, beyond use of authority servers which signal DoT support.
+No additional configuration is needed, beyond use of authority servers which signal DoT support.
 The following examples assumes the previous DNS records are provisioned:
 
         example.com NS ns1.example.net. // does not support ADoT
@@ -174,7 +174,7 @@ In this example, ns1 does not have ADoT support (since the DNS record excludes t
 These records are used to validate corresponding delegation records, DNS records, and TLSA records, as follows:
 
 *   Initial domain NS records are validated using [@?I-D.dickson-dnsop-ds-hack]
-*   All DS records imlementing [@?I-D.dickson-dnsop-ds-hack] must be DNSSEC validated prior to use
+*   All DS records implementing [@?I-D.dickson-dnsop-ds-hack] must be DNSSEC validated prior to use
 *   Once the NS names have been validated, and the delegations to the appropriate name servers are validated, the DNS records for the NS name are obtained to identify the DNS transport methods supported.
 *   If ADoT is among the supported transports, the TLSA record for the name server is obtained, and used for verification of the TLS certificate when making the TLS connection.
 
@@ -223,7 +223,7 @@ Suppose the following additional entries are in the respective authority servers
         //
         // ADOT TLSA signing cert
         // wildcard used for efficiency and caching performance
-        *.example2.net IN TLSADOT DANE-TA CERT FULL (signing cert)
+        *.example2.net IN TLSADOT DANE-TA SPKI SHA2-256 (signing cert)
         //
         // Addresses of name servers serving customer zones
         // E.g. example2.com to example5.com served on these
@@ -298,12 +298,12 @@ Once a cache is populated with wildcards from the name server domain, additional
 
 1. Query for delegation from TLD, and validate the response
 1. Query for the name server's address(es), and validate the response
-1. Send the query to the authoritive server for the domain with the sensitive name (over TLS or over UDP/TCP, depending on transport supported by the authoritative server)
+1. Send the query to the authoritative server for the domain with the sensitive name (over TLS or over UDP/TCP, depending on transport supported by the authoritative server)
 
 Once a cache is populated with name server addresses and wildcards, additional delegation queries require no more trips than those needed for normal UDP queries:
 
 1. Query for delegation from TLD, and validate the response
-1. Send the query to the authoritive server for the domain with the sensitive name (over TLS or over UDP/TCP, depending on transport supported by the authoritative server)
+1. Send the query to the authoritative server for the domain with the sensitive name (over TLS or over UDP/TCP, depending on transport supported by the authoritative server)
 
 # Signaling Resolver Support and Client Desire for ADoT
 
