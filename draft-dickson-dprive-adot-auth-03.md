@@ -6,7 +6,7 @@ category = "info"
 
 [seriesInfo]
 name = "Internet-Draft"
-value = "draft-dickson-dprive-adot-auth-02"
+value = "draft-dickson-dprive-adot-auth-03"
 stream = "IETF"
 status = "informational"
 

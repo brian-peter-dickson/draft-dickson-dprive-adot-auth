@@ -9,7 +9,7 @@ Expires: 23 March 2022
 
 
           Authenticated DNS over TLS to Authoritative Servers
-                   draft-dickson-dprive-adot-auth-02
+                   draft-dickson-dprive-adot-auth-03
 
 Abstract
 

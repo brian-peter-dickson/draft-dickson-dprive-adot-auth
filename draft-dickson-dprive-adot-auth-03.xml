@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- name="GENERATOR" content="github.com/mmarkdown/mmark Mmark Markdown Processor - mmark.miek.nl" -->
-<rfc version="3" ipr="trust200902" docName="draft-dickson-dprive-adot-auth-02" submissionType="IETF" category="info" xml:lang="en" xmlns:xi="http://www.w3.org/2001/XInclude" indexInclude="false" consensus="true">
+<rfc version="3" ipr="trust200902" docName="draft-dickson-dprive-adot-auth-03" submissionType="IETF" category="info" xml:lang="en" xmlns:xi="http://www.w3.org/2001/XInclude" indexInclude="false" consensus="true">
 
 <front>
-<title abbrev="Authenticated ADoT">Authenticated DNS over TLS to Authoritative Servers</title><seriesInfo value="draft-dickson-dprive-adot-auth-02" stream="IETF" status="informational" name="Internet-Draft"></seriesInfo>
+<title abbrev="Authenticated ADoT">Authenticated DNS over TLS to Authoritative Servers</title><seriesInfo value="draft-dickson-dprive-adot-auth-03" stream="IETF" status="informational" name="Internet-Draft"></seriesInfo>
 <author initials="B." surname="Dickson" fullname="Brian Dickson"><organization>GoDaddy</organization><address><postal><street></street>
 </postal><email>brian.peter.dickson@gmail.com</email>
 </address></author><date/>
