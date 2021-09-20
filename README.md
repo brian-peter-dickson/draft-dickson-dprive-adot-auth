@@ -77,7 +77,11 @@ The default binding is the standard DNS ports, UDP/53 and TCP/53.
 
 The SVCB binding includes support for an optional ADoT port, which is the standard DoT port TCP/853. This is signaled by "alpn=dot". The actual port number may be overridden with the "DOTport=N" SvcParam, and the UDP and TCP ports may also be overridden with optional "UDPport=N" and "TCPport=N" SvcParams.
 
-Since DNST is a type-specific binding, it does NOT require the underscore prefix naming that the generic SVCB RRTYPE requires. It may occur anywhere, including at the apex of a DNS zone, and may co-exist with any other type that also permits other types.
+Since DNST is a type-specific binding, it does NOT require the underscore prefix naming that the generic SVCB RRTYPE requires. It may occur anywhere, including at the apex of a DNS zone, and may co-exist with any other type that also permits other types.o
+
+The DNST binding allows both AliasMode and ServiceMode record types (per the proposed SVCB standard). Both mode types use a TargetName parameter, which supports same-name usage (TargetName = ".") as well as redirected TargetName values. The resolver must follow AliasMode in the same manner as CNAME, i.e. rewriting the QNAME and restarting resolution using the new QNAME.
+
+Once the DNST is in ServiceMode, the authoritative server returns both the DNST record(s) and A and AAAA records with the same owner name (TargetName). This reduces the number of queries the resolver would otherwise have to make (i.e. two additional queries for A and AAAA record types).
 
 #### Default Ports for DNS
 
@@ -95,32 +99,36 @@ The zone example.net would include the records:
         ns1.example.net. IN DNST 1 "."
         ns2.example.net. IN DNST 1 "." alpn=dot
 
-And similarly, if another zone with many name server names wanted to have a policy of all-ADoT support (i.e. every name server supports ADoT), this could be encoded as:
+And similarly, if another zone with many name server names wanted to have a policy of all-ADoT support (i.e. every name server supports ADoT), they would each be encoded as:
 
-        *.example2.net DNST 1 "." alpn=dot
+        ns1.example2.net DNST 1 "." alpn=dot
+        ns2.example2.net DNST 1 "." alpn=dot
+        ns3.example2.net DNST 1 "." alpn=dot
+        ns4.example2.net DNST 1 "." alpn=dot
 
-In each case, the first parameter is the SvcPriority, which must be non-zero (zero indicates AliasForm SVCB record type).
+In each case, the first parameter is the SvcPriority, which must be non-zero (zero indicates AliasMode SVCB record type).
 
 Note that it is possible for the resolver to use alter or ignore SvcPriority based on its own local policy. For instance, a resolver to prefer non-DoT over DoT or vice versa. Local policy might be to override SvcPriority ordering, and/or ignore some of the records. For example, a resolver might prefer to support mandatory use of DoT if present on any server in the NS RRset.
 
 ## DANE TLSA Records for ADoT
 
-The presence of ADoT requires additionally that a TLSA [@!RFC6698] record be provided. A new RRTYPE is to be created for this as an alias of TLSA, with mnemonic of "TLSADOT" (TLS ADOT Certificate). This record will be published at the location NS_NAME, where NS_NAME is the name of the name server. Any valid TLSA RDATA is permitted. The use of Certificate Usage types PKIX-TA and PKIX-EE is NOT RECOMMENDED. The use of Certificate Usage types DANE-TA TLSA records may provide more flexibility in provisioning, including use of wild cards.
-Per [@!RFC7218;@!RFC7671] the RECOMMENDED Selector and Matching types for this are SPKI and SHA2-256, giving the recommended TLSA record type of DANE-TA SPKI SHA2-256, with the full encoded certificate.
-
-Note that this TLSADOT record is "wildcard friendly". Use of aggressive synthesis by resolvers (per [@!RFC8198]) allows RRTYPE-specific wildcards to be used, avoiding repetitive entries where the RDATA is identical.
+The presence of ADoT requires additionally that a TLSA [@!RFC6698] record be provided. A new RRTYPE is to be created for this as an alias of TLSA, with mnemonic of "TLSADOT" (TLS ADOT Certificate). This record will be published at the location NS_NAME, where NS_NAME is the name of the name server. Any valid TLSA RDATA is permitted. The use of Certificate Usage types PKIX-TA and PKIX-EE is NOT RECOMMENDED since PKIX requires web PKI interactions. DANE types only require DNSSEC support. The use of Certificate Usage types DANE-TA records may provide more flexibility in provisioning and validation.
+Per [@!RFC7218;@!RFC7671] the RECOMMENDED Selector and Matching types for this are SPKI and SHA2-256, giving the recommended TLSA record type of DANE-TA SPKI SHA2-256.
 
 ### Example
 
 In the above example, ns2.example.net supports DNS over TLS, and thus would need to have a TLSA record. The zone would include:
 
-        ns2.example.net. IN TLSADOT DANE-TA SPKI SHA2-256 (signing cert)
+        ns2.example.net. IN TLSADOT DANE-TA SPKI SHA2-256 (hash data)
 
-If there were another zone containing many DNS server names, example2.net, it would be relatively simple to apply a wildcard record and use a signing cert (rather than end-entity cert) in the TLSADOT record).
-This would allow DNS caching to avoid repeated queries to the authoritative server for the zone containing the DNS server names, to obtain the TLSA-type information.
+If there were another zone containing many DNS server names, example2.net, it would be relatively simple to replicate otherwise identical records which use the same signing cert (rather than end-entity cert) in the TLSADOT record.
+
 This would look like the following:
 
-        *.example2.net IN TLSADOT DANE-TA SPKI SHA2-256 (signing cert)
+        ns1.example2.net IN TLSADOT DANE-TA SPKI SHA2-256 (hash data)
+        ns2.example2.net IN TLSADOT DANE-TA SPKI SHA2-256 (hash data)
+        ns3.example2.net IN TLSADOT DANE-TA SPKI SHA2-256 (hash data)
+        ns4.example2.net IN TLSADOT DANE-TA SPKI SHA2-256 (hash data)
         ns1.example2.net IN A IP4_ADDRESS1
         ns2.example2.net IN A IP4_ADDRESS2
         ns3.example2.net IN A IP4_ADDRESS3
@@ -137,8 +145,6 @@ The name servers must also be in a DNSSEC signed zone (i.e. securely delegated w
 
 The specific DNS transport that a name server supports is indicated via use of an RRSet of RRTYPE "DNST". This is a SVCB binding, and normally will use the TargetName of "." (meaning the same name). The default ALPN (transport mechanisms) are TCP/53 and UDP/53. The ADoT transport support is signaled by "alpn=dot". There is an existing entry for "dot" in the ALPN table, with port TCP/853.
 
-Note that this RRTYPE is also "wildcard friendly". If a DNS zone containing the names of many servers with identical policy (related to ADoT support), those could be managed via one or more wildcard entries.
-
 ### Examples
 We re-use the same examples from above, indicating whether or not individual authoritative name servers support DoT:
 
@@ -147,7 +153,10 @@ We re-use the same examples from above, indicating whether or not individual aut
 
 And similarly, if another zone with many name server names wanted to have a policy of all-ADoT support (i.e. every name server supports ADoT), this could be encoded as:
 
-        *.example2.net DNST 1 "." alpn=dot
+        ns1.example2.net DNST 1 "." alpn=dot
+        ns2.example2.net DNST 1 "." alpn=dot
+        ns3.example2.net DNST 1 "." alpn=dot
+        ns4.example2.net DNST 1 "." alpn=dot
 
 ## Signaling DNS Transport for a Domain
 
@@ -218,12 +227,16 @@ Suppose the following additional entries are in the respective authority servers
         example2.net NS ns2.infra2.example
         //
         // SVCB records (DNS Transport) for discovery of support
-        // wildcard used for efficiency and caching performance
-        *.example2.net DNST 1 "." alpn=dot
+        ns1.example2.net DNST 1 "." alpn=dot
+        ns2.example2.net DNST 1 "." alpn=dot
+        ns3.example2.net DNST 1 "." alpn=dot
+        ns4.example2.net DNST 1 "." alpn=dot
         //
         // ADOT TLSA signing cert
-        // wildcard used for efficiency and caching performance
-        *.example2.net IN TLSADOT DANE-TA SPKI SHA2-256 (signing cert)
+        ns1.example2.net IN TLSADOT DANE-TA SPKI SHA2-256 (hash data)
+        ns2.example2.net IN TLSADOT DANE-TA SPKI SHA2-256 (hash data)
+        ns3.example2.net IN TLSADOT DANE-TA SPKI SHA2-256 (hash data)
+        ns4.example2.net IN TLSADOT DANE-TA SPKI SHA2-256 (hash data)
         //
         // Addresses of name servers serving customer zones
         // E.g. example2.com to example5.com served on these
@@ -254,7 +267,28 @@ Suppose the following additional entries are in the respective authority servers
         //
         // plus RRSIGs and NSEC(3) records and their RRSIGs
 
+### Discussion Point - Wildcard-like Records
+
+Wildcards records have RRTYPE(s), but are only instantiated when an owner name does not exist.
+
+If wildcards were instantiated whenever the 3-tuple (name, class, type) did not exist, use of wildcard records for DNST and TLSADOT would be a logical choice.
+
+The discussion point is as follows:
+
+* Would it make sense to support a wildcard-like behavior for covering many owner names which did not have explicit DNST and/or TLSADOT records of their own?
+* If so, when/how would that be signalled?
+    * It could be explicit, using a separate RRTYPE to flag the need to use the parent name (zone apex) for the required RRTYPE.
+        * This would support use of NSEC(3) records to check for the flag
+        * A resolver could use the flag to optimize cache usage for the parent record. Once the parent is in the cache, the flag in the NSEC(3) for the owner name would trigger use of the cached parent record.
+    * It could be implicit, meaning the absence of the explicit record type results in the need to search for the record type at another name (e.g. zone apex).
+        * The lack of explicit record could be detected from NSEC(3) records
+        * The implicit flag would be handled the same as the explicit flag case above.
+* The TLSADOT record at the parent zone would only be viable for DANE-TA type.
+* The DNST record at the parent zone would need to inherit the original owner name for use by TargetName = "." semantics.
+
 ### Resolver Iterative Queries For Final TLS Query
+
+(In the following, use of wildcard-type records and semantics is assumed, but not explictly described currently. Literal wildcard record labels ("*") are used as a placeholder, pending the above Discussion Point's resolution.)
 
 The following are the necessary queries to various servers necessary to do a private TLS-protected lookup.
 
