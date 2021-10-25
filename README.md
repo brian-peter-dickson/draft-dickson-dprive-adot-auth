@@ -29,21 +29,22 @@ Authoritative DNS over TLS is intended to provide the following for communicatio
 ## New DNS Elements
 
 The following are new protocol components, which are either included in this document, or are in other documents. Some are strictly required, while others are strongly suggested components to allow better scalability and performance. Some of the new elements are aliases to already documented standards, for purposes of these improvements.
+DNST refers to [@?I-D.dickson-dprive-dnst]
 
 Element | New/Alias/OPT | Format/Base | Required | Description
 ------- | ------------- | ----------- | -------- | -----------
-DNST | Alias | SVCB | Spec: Y DNS: N | DNS Transport - support for DoT
+DNST | New | Flags | Y | DNS Transport - support for DoT
 TLSADOT | Alias | TLSA | Spec: Opt DNS: Yes or TLSA | TLSA without prefixing
 ADOTD | New | OPT RR | N | Signal desire for ADOT (client-resolver)
 ADOTA | New | OPT RR | N | Signal availablity of ADOT (resolver-client)
 NSECD | New | OPT RR | N | Signal desire for NSEC(3) for [@!RFC8198]
-NSV | New | DNSKEY Alg | Y | Protect NS - see [@I-D.dickson-dnsop-ds-hack]
+NSV | New | DNSKEY Alg | Y | Protect NS - see [@?I-D.dickson-dnsop-ds-hack]
 
 # Requirements, and Limitations
 
 This protocol depends on correct configuration and operation of the respective components, and that those are maintained according to Best Current Practices:
 
-*   Use of DS records [@I-D.dickson-dnsop-ds-hack] for the protection of the delegation to the authoritative name servers
+*   Use of DS records [@?I-D.dickson-dnsop-ds-hack] for the protection of the delegation to the authoritative name servers
 *   Use of "glueless" zone(s) for name server names' zone [@I-D.dickson-dnsop-glueless]
 *   DNSSEC signing of the zone serving the authoritative name servers' names [@RFC4034;@RFC4035;RFC5155]
 *   Proper management of key signing material for DNSSEC
@@ -64,7 +65,7 @@ ADoT is a property of DNS servers. The signaling is done at the server level, us
 In order to support ADoT for a DNS server, it is necessary to publish a record specifyig explicit DoT support.
 This record also indicates other supported transports for the DNS server, e.g. the standard ports (TCP and UDP port 53).
 
-The record type is "DNST" (DNS Transport), which is a specific instance of (aka binding for) SVCB with unique RRTYPE.
+The record type is "DNST" (DNS Transport), which is a single resource record consisting of flags for different supported transport types.
 
 The zone serving the record MUST be DNSSEC signed. The absence of the DNST RRTYPE is proved by the NSEC(3) record, or else the DNST RRTYPE plus RRSIG is returned in response to a query for this record if it exists.
 
@@ -73,15 +74,15 @@ The zone serving the record MUST be DNSSEC signed. The absence of the DNST RRTYP
 Suppose the name server ns1.example.net supports only the normal DNS ports, and the name server ns2.example.net supports both the normal ports and ADoT.
 The zone example.net would include the records:
 
-        ns1.example.net. IN DNST 1 "."
-        ns2.example.net. IN DNST 1 "." alpn=dot
+        ns1.example.net. IN DNST UDP TCP
+        ns2.example.net. IN DNST UDP TCP DOT
 
 And similarly, if another zone with many name server names wanted to have a policy of all-ADoT support (i.e. every name server supports ADoT), they would each be encoded as:
 
-        ns1.example2.net DNST 1 "." alpn=dot
-        ns2.example2.net DNST 1 "." alpn=dot
-        ns3.example2.net DNST 1 "." alpn=dot
-        ns4.example2.net DNST 1 "." alpn=dot
+        ns1.example2.net DNST UDP TCP DOT
+        ns2.example2.net DNST UDP TCP DOT
+        ns3.example2.net DNST UDP TCP DOT
+        ns4.example2.net DNST UDP TCP DOT
 
 In each case, the first parameter is the SvcPriority, which must be non-zero (zero indicates AliasMode SVCB record type).
 
@@ -120,20 +121,20 @@ This would look like the following:
 This transport signaling MUST only be trusted if the name server names for the domain containing the relevant name servers' names are protected with [@?I-D.dickson-dnsop-ds-hack] and validated. 
 The name servers must also be in a DNSSEC signed zone (i.e. securely delegated where the delegation has been successfully DNSSEC validated).
 
-The specific DNS transport that a name server supports is indicated via use of an RRSet of RRTYPE "DNST". This is a SVCB binding, and normally will use the TargetName of "." (meaning the same name). The default ALPN (transport mechanisms) are TCP/53 and UDP/53. The ADoT transport support is signaled by "alpn=dot". There is an existing entry for "dot" in the ALPN table, with port TCP/853.
+The specific DNS transport that a name server supports is indicated via use of an RRSet of RRTYPE "DNST".
 
 ### Examples
 We re-use the same examples from above, indicating whether or not individual authoritative name servers support DoT:
 
-        ns1.example.net. IN DNST 1 "."
-        ns2.example.net. IN DNST 1 "." alpn=dot
+        ns1.example.net. IN DNST UDP TCP DOTDNST 1 "."
+        ns2.example.net. IN DNST UDP TCP DOTDNST 1 "." alpn=dot
 
 And similarly, if another zone with many name server names wanted to have a policy of all-ADoT support (i.e. every name server supports ADoT), this could be encoded as:
 
-        ns1.example2.net DNST 1 "." alpn=dot
-        ns2.example2.net DNST 1 "." alpn=dot
-        ns3.example2.net DNST 1 "." alpn=dot
-        ns4.example2.net DNST 1 "." alpn=dot
+        ns1.example2.net DNST UDP TCP DOT
+        ns2.example2.net DNST UDP TCP DOT
+        ns3.example2.net DNST UDP TCP DOT
+        ns4.example2.net DNST UDP TCP DOT
 
 ## Signaling DNS Transport for a Domain
 
@@ -204,10 +205,10 @@ Suppose the following additional entries are in the respective authority servers
         example2.net NS ns2.infra2.example
         //
         // SVCB records (DNS Transport) for discovery of support
-        ns1.example2.net DNST 1 "." alpn=dot
-        ns2.example2.net DNST 1 "." alpn=dot
-        ns3.example2.net DNST 1 "." alpn=dot
-        ns4.example2.net DNST 1 "." alpn=dot
+        ns1.example2.net DNST UDP TCP DOT
+        ns2.example2.net DNST UDP TCP DOT
+        ns3.example2.net DNST UDP TCP DOT
+        ns4.example2.net DNST UDP TCP DOT
         //
         // ADOT TLSA signing cert
         ns1.example2.net IN TLSADOT DANE-TA SPKI SHA2-256 (hash data)
@@ -301,7 +302,7 @@ Several examples are provided in order, from a presumed cold cache state. Root P
     1. (Already have all TLS info in the cache.)
     1. Query over TLS for sensitive-name.example2.com (to ns1.example2.net, match TLS cert chain against DANE-TA cert, only query once TLS established)
 
-Once the initial query or queries for a name server zone has been done, if that zone uses wildcards for  DNST and TLSADOT, the only queries needed for a new name server are the A and/or AAAA records.
+Once the initial query or queries for a name server zone has been done, if that zone uses wildcards for DNST and TLSADOT, the only queries needed for a new name server are the A and/or AAAA records.
 Once the initial query for a name server has been done, all of the address and TLS information is available in the cache, and the DOT query can be made upon receipt of the TLD delegation record.
 Once the initial query for a second-level domain has been done, the TLD delegation and all of the address and TLS information is available in the cache, and the DOT query can be made immediately.
 
