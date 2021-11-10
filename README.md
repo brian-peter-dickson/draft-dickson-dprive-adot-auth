@@ -34,10 +34,10 @@ DNST refers to [@?I-D.dickson-dprive-dnst]
 Element | New/Alias/OPT | Format/Base | Required | Description
 ------- | ------------- | ----------- | -------- | -----------
 DNST | New | Flags | Y | DNS Transport - support for DoT
-TLSADOT | Alias | TLSA | Spec: Opt DNS: Yes or TLSA | TLSA without prefixing
-ADOTD | New | OPT RR | N | Signal desire for ADOT (client-resolver)
-ADOTA | New | OPT RR | N | Signal availablity of ADOT (resolver-client)
-NSECD | New | OPT RR | N | Signal desire for NSEC(3) for [@!RFC8198]
+TLSADOT | Alias | TLSA | Y | TLSA without prefixing
+ADOTD | New | OPT RR (flag) | N | Signal desire for ADOT (client-resolver)
+ADOTA | New | OPT RR (flag) | N | Signal availablity of ADOT (resolver-client)
+NSECD | New | OPT RR (flag) | N | Signal desire for NSEC(3) for [@!RFC8198]
 NSV | New | DNSKEY Alg | Y | Protect NS - see [@?I-D.dickson-dnsop-ds-hack]
 
 # Requirements, and Limitations
@@ -49,7 +49,7 @@ This protocol depends on correct configuration and operation of the respective c
 *   DNSSEC signing of the zone serving the authoritative name servers' names [@RFC4034;@RFC4035;RFC5155]
 *   Proper management of key signing material for DNSSEC
 *   Ongoing management of RRSIGs on a timely basis (avoiding RRSIG expiry)
-*   Ensuring TLSA records are kept synchronized with the TLS certificates used
+*   Ensuring TLSADOT records are kept synchronized with the TLS certificates used
 *   Proper management of TLS private keys for TLS certificates used
 
 There are external dependencies that impact the system security of any DNSSEC zone, which are inherently unavoidable in establishing this scheme. Specifially, the original DS record enrollment and any updates to the DS records involved in DNSSEC delegations are presumed secure and outside of the scope of the DNS protocol per se.
@@ -84,18 +84,14 @@ And similarly, if another zone with many name server names wanted to have a poli
         ns3.example2.net DNST UDP TCP DOT
         ns4.example2.net DNST UDP TCP DOT
 
-In each case, the first parameter is the SvcPriority, which must be non-zero (zero indicates AliasMode SVCB record type).
+## DANE TLSA Records for ADoT (TLSADOT)
 
-Note that it is possible for the resolver to use alter or ignore SvcPriority based on its own local policy. For instance, a resolver to prefer non-DoT over DoT or vice versa. Local policy might be to override SvcPriority ordering, and/or ignore some of the records. For example, a resolver might prefer to support mandatory use of DoT if present on any server in the NS RRset.
-
-## DANE TLSA Records for ADoT
-
-The presence of ADoT requires additionally that a TLSA [@!RFC6698] record be provided. A new RRTYPE is to be created for this as an alias of TLSA, with mnemonic of "TLSADOT" (TLS ADOT Certificate). This record will be published at the location NS_NAME, where NS_NAME is the name of the name server. Any valid TLSA RDATA is permitted. The use of Certificate Usage types PKIX-TA and PKIX-EE is NOT RECOMMENDED since PKIX requires web PKI interactions. DANE types only require DNSSEC support. The use of Certificate Usage types DANE-TA records may provide more flexibility in provisioning and validation.
-Per [@!RFC7218;@!RFC7671] the RECOMMENDED Selector and Matching types for this are SPKI and SHA2-256, giving the recommended TLSA record type of DANE-TA SPKI SHA2-256.
+The presence of ADoT requires additionally that a TLSA [@!RFC6698] record be provided. A new RRTYPE is to be created for this as an alias of TLSA, with mnemonic of "TLSADOT" (TLS ADOT Certificate). This record will be published at the location NS_NAME, where NS_NAME is the name of the name server. Any valid TLSA RDATA is permitted. The use of Certificate Usage types PKIX-TA and PKIX-EE is NOT RECOMMENDED since PKIX requires web PKI interactions. DANE types only require DNSSEC support. The use of Certificate Usage types DANE-TA records may provide more flexibility in provisioning and validation. On the other hand, DANE-EE is more secure, with fewer consequences for private key loss and certificate revocation.
+Per [@!RFC7218;@!RFC7671] the RECOMMENDED Selector and Matching types for this are SPKI and SHA2-256, giving the recommended TLSADOT record type of DANE-TA SPKI SHA2-256.
 
 ### Example
 
-In the above example, ns2.example.net supports DNS over TLS, and thus would need to have a TLSA record. The zone would include:
+In the above example, ns2.example.net supports DNS over TLS, and thus would need to have a TLSADOT record. The zone would include:
 
         ns2.example.net. IN TLSADOT DANE-TA SPKI SHA2-256 (hash data)
 
@@ -126,8 +122,8 @@ The specific DNS transport that a name server supports is indicated via use of a
 ### Examples
 We re-use the same examples from above, indicating whether or not individual authoritative name servers support DoT:
 
-        ns1.example.net. IN DNST UDP TCP DOTDNST 1 "."
-        ns2.example.net. IN DNST UDP TCP DOTDNST 1 "." alpn=dot
+        ns1.example.net. IN DNST UDP TCP DOTDNST
+        ns2.example.net. IN DNST UDP TCP DOTDNST
 
 And similarly, if another zone with many name server names wanted to have a policy of all-ADoT support (i.e. every name server supports ADoT), this could be encoded as:
 
@@ -154,16 +150,16 @@ The following examples assumes the previous DNS records are provisioned:
         example2.com NS ns1.example2.net. // all support ADoT
         example2.com NS ns2.example2.net. // all support ADoT
 
-In this example, ns1 does not have ADoT support (since the DNS record excludes the "alpn=dot" parameter), while ns2 does support ADoT (since it includes "alpn=dot").
+In this example, ns1 does not have ADoT support (since the DNST record excludes the DOT flag), while ns2 does support ADoT (since it includes DOT).
 
-# Validation Using DS Records, DNS Records, TLSA Records, and DNSSEC Validation
+# Validation Using DS Records, DNST Records, TLSADOT Records, and DNSSEC Validation
 
-These records are used to validate corresponding delegation records, DNS records, and TLSA records, as follows:
+These records are used to validate corresponding delegation records, DNST records, and TLSADOT records, as follows:
 
 *   Initial domain NS records are validated using [@?I-D.dickson-dnsop-ds-hack]
 *   All DS records implementing [@?I-D.dickson-dnsop-ds-hack] must be DNSSEC validated prior to use
-*   Once the NS names have been validated, and the delegations to the appropriate name servers are validated, the DNS records for the NS name are obtained to identify the DNS transport methods supported.
-*   If ADoT is among the supported transports, the TLSA record for the name server is obtained, and used for verification of the TLS certificate when making the TLS connection.
+*   Once the NS names have been validated, and the delegations to the appropriate name servers are validated, the DNST records for the NS name are obtained to identify the DNS transport methods supported.
+*   If ADoT is among the supported transports, the TLSADOT record for the name server is obtained, and used for verification of the TLS certificate when making the TLS connection.
 
 ## Complete Example
 
@@ -204,13 +200,13 @@ Suppose the following additional entries are in the respective authority servers
         example2.net NS ns1.infra2.example
         example2.net NS ns2.infra2.example
         //
-        // SVCB records (DNS Transport) for discovery of support
+        // DNS Transport for discovery of support
         ns1.example2.net DNST UDP TCP DOT
         ns2.example2.net DNST UDP TCP DOT
         ns3.example2.net DNST UDP TCP DOT
         ns4.example2.net DNST UDP TCP DOT
         //
-        // ADOT TLSA signing cert
+        // TLSADOT signing cert
         ns1.example2.net IN TLSADOT DANE-TA SPKI SHA2-256 (hash data)
         ns2.example2.net IN TLSADOT DANE-TA SPKI SHA2-256 (hash data)
         ns3.example2.net IN TLSADOT DANE-TA SPKI SHA2-256 (hash data)
@@ -261,8 +257,7 @@ The discussion point is as follows:
     * It could be implicit, meaning the absence of the explicit record type results in the need to search for the record type at another name (e.g. zone apex).
         * The lack of explicit record could be detected from NSEC(3) records
         * The implicit flag would be handled the same as the explicit flag case above.
-* The TLSADOT record at the parent zone would only be viable for DANE-TA type.
-* The DNST record at the parent zone would need to inherit the original owner name for use by TargetName = "." semantics.
+* The TLSADOT record at the parent zone would only be viable for DANE-TA or PKIX-TA types.
 
 ### Resolver Iterative Queries For Final TLS Query
 
